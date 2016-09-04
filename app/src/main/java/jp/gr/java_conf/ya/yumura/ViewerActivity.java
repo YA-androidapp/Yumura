@@ -1,5 +1,6 @@
 package jp.gr.java_conf.ya.yumura; // Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -12,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
@@ -19,16 +21,17 @@ import android.widget.EditText;
 import java.net.URLEncoder;
 import java.util.Iterator;
 
+import jp.gr.java_conf.ya.yumura.Network.CheckConnectivity;
 import jp.gr.java_conf.ya.yumura.String.IntentString;
+import jp.gr.java_conf.ya.yumura.Twitter.KeyManage;
 import jp.gr.java_conf.ya.yumura.Twitter.TwitterAccess;
 
+//TODO
 public class ViewerActivity extends AppCompatActivity {
 
     private static String GOOGLE_SEARCH_URL = "https://www.google.co.jp/search?q=";
 
     private SearchView searchView;
-    private String searchViewString;
-    private WebView webView;
     private SearchView.OnQueryTextListener onQueryTextListener = new SearchView.OnQueryTextListener() {
         @Override
         public boolean onQueryTextSubmit(String searchWord) {
@@ -41,6 +44,41 @@ public class ViewerActivity extends AppCompatActivity {
         }
     };
 
+    private String searchViewString;
+
+    private WebView webView;
+
+    public static class DialogFragment_UpdateStatus extends DialogFragment {
+        private EditText editText;
+        private TlAdapter adapter;
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            final Bundle bundle = getArguments();
+            final String updateText = bundle.getString("updateText");
+
+            editText = new EditText(getActivity());
+            editText.setHint(R.string.action_update_text);
+            editText.setText(updateText);
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setTitle(R.string.action_update);
+            builder.setView(editText);
+            builder.setPositiveButton(R.string.action_update,
+                    new DialogInterface.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if ((editText != null) && (!editText.getText().toString().equals(""))) {
+                                adapter = new TlAdapter(getActivity(),null);
+                                TwitterAccess twitterAccess = new TwitterAccess(adapter);
+                                twitterAccess.updateStatus(KeyManage.getCurrentUser().screenName,editText.getText().toString());
+                            }
+                        }
+                    });
+            return builder.create();
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,15 +89,26 @@ public class ViewerActivity extends AppCompatActivity {
             public final void run() {
                 final String url = IntentString.getUrlFromIntent(getIntent(),"about:blank");
 
+                final boolean isFastWifi = CheckConnectivity.getWifiSpeed() >= 300;
+
                 runOnUiThread(new Runnable() {
+                    @SuppressLint("SetJavaScriptEnabled")
                     @Override
                     public final void run() {
                         webView = new WebView(ViewerActivity.this);
                         webView.setWebViewClient(new WebViewClient());
-                        webView.loadUrl(url);
+                        webView.getSettings().setAppCacheEnabled(true);
+                        webView.getSettings().setCacheMode(
+                                isFastWifi
+                                        ?WebSettings.LOAD_NO_CACHE
+                                        :WebSettings.LOAD_CACHE_ELSE_NETWORK);
                         webView.getSettings().setJavaScriptEnabled(true);
-                        webView.getSettings().setUserAgentString("");
+                        //webView.getSettings().setUserAgentString("");
                         setContentView(webView);
+
+
+
+                        webView.loadUrl(url);
                     }
                 });
             }
@@ -147,37 +196,5 @@ public class ViewerActivity extends AppCompatActivity {
         }).start();
 
         return false;
-    }
-
-    public static class DialogFragment_UpdateStatus extends DialogFragment {
-        private EditText editText;
-        private TlAdapter adapter;
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            final Bundle bundle = getArguments();
-            final String updateText = bundle.getString("updateText");
-
-            editText = new EditText(getActivity());
-            editText.setHint(R.string.action_update_text);
-            editText.setText(updateText);
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setTitle(R.string.action_update);
-            builder.setView(editText);
-            builder.setPositiveButton(R.string.action_update,
-                    new DialogInterface.OnClickListener() {
-
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if ((editText != null) && (!editText.getText().toString().equals(""))) {
-                                adapter = new TlAdapter(getActivity(),null);
-                                TwitterAccess twitterAccess = new TwitterAccess(adapter);
-                                twitterAccess.updateStatus(editText.getText().toString());
-                            }
-                        }
-                    });
-            return builder.create();
-        }
     }
 }

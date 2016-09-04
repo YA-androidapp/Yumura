@@ -1,17 +1,21 @@
 package jp.gr.java_conf.ya.yumura.Twitter; // Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
+import android.util.Log;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import jp.gr.java_conf.ya.yumura.R;
 import jp.gr.java_conf.ya.yumura.String.ViewString;
+import jp.gr.java_conf.ya.yumura.Time.Time;
 import twitter4j.Status;
 import twitter4j.StatusUpdate;
 import twitter4j.URLEntity;
@@ -19,8 +23,19 @@ import twitter4j.URLEntity;
 public class TweetMenu {
     private static Context context;
 
-    public static void showTweetMenu(final Context c, final Status status) {
+    public static void showTweetMenu(final Context c, Status status) {
         context = c;
+
+        if (status == null)
+            return;
+
+        if (Time.differenceMinutes(status.getCreatedAt()) > 2) {
+            final Status tempStatus = TwitterAccess.showStatus(status.getId());
+            if (tempStatus != null)
+                status = tempStatus;
+        }
+
+        final Status statusMe = status;
         final Status statusRT = (status.getRetweetedStatus() != null) ? status.getRetweetedStatus() : status;
 
         final String screennameAndText = ViewString.getScreennameAndText(status);
@@ -32,12 +47,14 @@ public class TweetMenu {
         menuItem.add(context.getString(R.string.tweet_reply));
         menuItem.add(context.getString(R.string.tweet_retweet));
         menuItem.add(context.getString(R.string.tweet_userretweet));
-        menuItem.add(context.getString(R.string.tweet_favorite));
+        menuItem.add(context.getString(R.string.tweet_create_favorite));
         menuItem.add(context.getString(R.string.tweet_favoriteretweet));
         menuItem.add(context.getString(R.string.tweet_favoriteuserretweet));
+        menuItem.add(context.getString(R.string.tweet_destroy_favorite));
         menuItem.add(context.getString(R.string.tweet_share_url));
         menuItem.add(context.getString(R.string.tweet_share_url_tweet));
         menuItem.add(context.getString(R.string.tweet_share_text));
+        menuItem.add(context.getString(R.string.tweet_delete));
         menuItem.add(context.getString(R.string.tweet_pak));
 
         final String[] menuItemArray = menuItem.toArray(new String[0]);
@@ -56,20 +73,24 @@ public class TweetMenu {
                             tweetRetweet(statusRT);
                         } else if (menuItemArray[which].equals(context.getString(R.string.tweet_userretweet))) {
                             tweetUserRetweet(statusRT);
-                        } else if (menuItemArray[which].equals(context.getString(R.string.tweet_favorite))) {
-                            tweetFavorite(statusRT);
+                        } else if (menuItemArray[which].equals(context.getString(R.string.tweet_create_favorite))) {
+                            tweetCreateFavorite(statusRT);
                         } else if (menuItemArray[which].equals(context.getString(R.string.tweet_favoriteretweet))) {
-                            tweetFavorite(statusRT);
+                            tweetCreateFavorite(statusRT);
                             tweetRetweet(statusRT);
                         } else if (menuItemArray[which].equals(context.getString(R.string.tweet_favoriteuserretweet))) {
-                            tweetFavorite(statusRT);
+                            tweetCreateFavorite(statusRT);
                             tweetUserRetweet(statusRT);
+                        } else if (menuItemArray[which].equals(context.getString(R.string.tweet_destroy_favorite))) {
+                            tweetDestroyFavorite(statusRT);
                         } else if (menuItemArray[which].equals(context.getString(R.string.tweet_share_url))) {
                             tweetShareUrl(statusRT);
                         } else if (menuItemArray[which].equals(context.getString(R.string.tweet_share_url_tweet))) {
                             tweetShareUrlTweet(statusRT);
                         } else if (menuItemArray[which].equals(context.getString(R.string.tweet_share_text))) {
                             tweetShareText(statusRT);
+                        } else if (menuItemArray[which].equals(context.getString(R.string.tweet_delete))) {
+                            tweetDelete(statusMe);
                         } else if (menuItemArray[which].equals(context.getString(R.string.tweet_pak))) {
                             tweetPak(statusRT);
                         }
@@ -90,54 +111,127 @@ public class TweetMenu {
     }
 
     private static void tweetReply(final Status status) {
-        try {
-            final EditText editText = new EditText(context);
-            editText.setHint(R.string.action_update_text);
-            editText.setText("@" + status.getUser().getScreenName() + " ");
+        final EditText editText = new EditText(context);
+        editText.setHint(R.string.action_update_text);
+        editText.setText("@" + status.getUser().getScreenName() + " ");
 
-            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setTitle(R.string.action_update);
-            builder.setView(editText);
-            builder.setPositiveButton(R.string.action_update,
-                    new DialogInterface.OnClickListener() {
-
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if ((editText != null) && (!editText.getText().toString().equals(""))) {
-                                TwitterAccess twitterAccess = new TwitterAccess(null);
-                                StatusUpdate statusUpdate = new StatusUpdate(editText.getText().toString());
+        final String[] menuItemArray = KeyManage.getScreenNames("@", "");
+        final AlertDialog.Builder accountDlg = new AlertDialog.Builder(context);
+        accountDlg.setTitle(context.getString(R.string.tweet_reply) + ": " + ViewString.getScreennameAndText(status));
+        accountDlg.setView(editText);
+        accountDlg.setItems(
+                menuItemArray,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        if ((editText != null) && (!editText.getText().toString().equals(""))) {
+                            try {
+                                final TwitterAccess twitterAccess = new TwitterAccess(null);
+                                final StatusUpdate statusUpdate = new StatusUpdate(editText.getText().toString());
                                 statusUpdate.inReplyToStatusId(status.getId());
-                                twitterAccess.updateStatus(statusUpdate);
+                                twitterAccess.updateStatus(menuItemArray[which].replace("@", ""), statusUpdate);
+                            } catch (Exception e) {
                             }
                         }
-                    });
-            builder.create().show();
-        } catch (Exception e) {
-        }
+                    }
+                });
+        accountDlg.create().show();
     }
 
     private static void tweetRetweet(final Status status) {
-        try {
-            TwitterAccess twitterAccess = new TwitterAccess(null);
-            twitterAccess.retweet(status);
-        } catch (Exception e) {
-        }
+        final String[] menuItemArray = KeyManage.getScreenNames("@", "");
+        final AlertDialog.Builder accountDlg = new AlertDialog.Builder(context);
+        accountDlg.setTitle(context.getString(R.string.tweet_retweet) + ": " + ViewString.getScreennameAndText(status));
+        accountDlg.setItems(
+                menuItemArray,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, final int which) {
+                        new Thread(new Runnable() {
+                            @Override
+                            public final void run() {
+                                try {
+                                    TwitterAccess twitterAccess = new TwitterAccess(null);
+                                    twitterAccess.retweet(menuItemArray[which],status);
+                                } catch (Exception e) {
+                                }
+                            }
+                        }).start();
+                    }
+                });
+        accountDlg.create().show();
     }
 
     private static void tweetUserRetweet(final Status status) {
-        try {
-            TwitterAccess twitterAccess = new TwitterAccess(null);
-            twitterAccess.userRetweet(status);
-        } catch (Exception e) {
-        }
+        final String[] menuItemArray = KeyManage.getScreenNames("@", "");
+        final AlertDialog.Builder accountDlg = new AlertDialog.Builder(context);
+        accountDlg.setTitle(context.getString(R.string.tweet_userretweet) + ": " + ViewString.getScreennameAndText(status));
+        accountDlg.setItems(
+                menuItemArray,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, final int which) {
+                        new Thread(new Runnable() {
+                            @Override
+                            public final void run() {
+                                try {
+                                    TwitterAccess twitterAccess = new TwitterAccess(null);
+                                    twitterAccess.userRetweet(menuItemArray[which],status);
+                                } catch (Exception e) {
+                                }
+                            }
+                        }).start();
+                    }
+                });
+        accountDlg.create().show();
     }
 
-    private static void tweetFavorite(final Status status) {
-        try {
-            TwitterAccess twitterAccess = new TwitterAccess(null);
-            twitterAccess.favorite(status);
-        } catch (Exception e) {
-        }
+    private static void tweetCreateFavorite(final Status status) {
+        final String[] menuItemArray = KeyManage.getScreenNames("@", "");
+        final AlertDialog.Builder accountDlg = new AlertDialog.Builder(context);
+        accountDlg.setTitle(context.getString(R.string.tweet_create_favorite) + ": " + ViewString.getScreennameAndText(status));
+        accountDlg.setItems(
+                menuItemArray,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, final int which) {
+                        new Thread(new Runnable() {
+                            @Override
+                            public final void run() {
+                                try {
+                                    TwitterAccess twitterAccess = new TwitterAccess(null);
+                                    twitterAccess.createFavorite(menuItemArray[which],status);
+                                } catch (Exception e) {
+                                }
+                            }
+                        }).start();
+                    }
+                });
+        accountDlg.create().show();
+    }
+
+    private static void tweetDestroyFavorite(final Status status) {
+        final String[] menuItemArray = KeyManage.getScreenNames("@", "");
+        final AlertDialog.Builder accountDlg = new AlertDialog.Builder(context);
+        accountDlg.setTitle(context.getString(R.string.tweet_destroy_favorite) + ": " + ViewString.getScreennameAndText(status));
+        accountDlg.setItems(
+                menuItemArray,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, final int which) {
+                        new Thread(new Runnable() {
+                            @Override
+                            public final void run() {
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public final void run() {
+                                        try {
+                                            TwitterAccess twitterAccess = new TwitterAccess(null);
+                                            twitterAccess.destroyFavorite(menuItemArray[which],status);
+                                        } catch (Exception e) {
+                                        }
+                                    }
+                                }).start();
+                            }
+                        }).start();
+                    }
+                });
+        accountDlg.create().show();
     }
 
     private static void tweetShareUrl(final Status status) {
@@ -178,12 +272,52 @@ public class TweetMenu {
         }
     }
 
+    private static void tweetDelete(final Status status) {
+
+        final String[] menuItemArray = KeyManage.getScreenNames("@", "");
+        final AlertDialog.Builder accountDlg = new AlertDialog.Builder(context);
+        accountDlg.setTitle(context.getString(R.string.tweet_delete) + ": " + ViewString.getScreennameAndText(status));
+        accountDlg.setItems(
+                menuItemArray,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, final int which) {
+                        new Thread(new Runnable() {
+                            @Override
+                            public final void run() {
+                                try {
+                                    TwitterAccess twitterAccess = new TwitterAccess(null);
+                                    twitterAccess.destroyStatus(menuItemArray[which],status);
+                                } catch (Exception e) {
+                                    Log.v("Yumura", e.getMessage());
+                                }
+                            }
+                        }).start();
+                    }
+                });
+        accountDlg.create().show();
+    }
+
     private static void tweetPak(final Status status) {
-        try {
-            TwitterAccess twitterAccess = new TwitterAccess(null);
-            twitterAccess.pak(status);
-        } catch (Exception e) {
-        }
+        final String[] menuItemArray = KeyManage.getScreenNames("@", "");
+        final AlertDialog.Builder accountDlg = new AlertDialog.Builder(context);
+        accountDlg.setTitle(context.getString(R.string.tweet_pak) + ": " + ViewString.getScreennameAndText(status));
+        accountDlg.setItems(
+                menuItemArray,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, final int which) {
+                        new Thread(new Runnable() {
+                            @Override
+                            public final void run() {
+                                try {
+                                    TwitterAccess twitterAccess = new TwitterAccess(null);
+                                    twitterAccess.pak(menuItemArray[which].replace("@",""),status);
+                                } catch (Exception e) {
+                                }
+                            }
+                        }).start();
+                    }
+                });
+        accountDlg.create().show();
     }
 
 }

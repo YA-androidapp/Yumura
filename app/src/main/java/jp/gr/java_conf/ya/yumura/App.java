@@ -15,10 +15,7 @@ import twitter4j.TwitterException;
 
 public class App extends android.app.Application {
 
-    public static final String NAME = "YourAppName";
-    public static final String TAG = "YourAppName";
-    public static final int MP = ViewGroup.LayoutParams.FILL_PARENT;
-    public static final int WC = ViewGroup.LayoutParams.WRAP_CONTENT;
+    public static final String TAG = "Yumura";
 
     private static App instance;
     public App() {

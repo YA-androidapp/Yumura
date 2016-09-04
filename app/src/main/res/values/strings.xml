@@ -2,8 +2,12 @@
     <!-- TlActivity -->
     <string name="app_name">Yumura</string>
     <string name="app_name_viewer">Yumura viewer</string>
+    <string name="action_cancel">キャンセル</string>
     <string name="action_change_consumer_key">コンシューマーキーの変更</string>
+    <string name="action_delJustBefore">直前のツイートを削除</string>
+    <string name="action_delJustBefore_del">削除</string>
     <string name="action_makeShortcut">ショートカットを作成</string>
+    <string name="action_move_to_unread">未読へ移動</string>
     <string name="action_settings">Settings</string>
     <string name="action_update">投稿</string>
     <string name="action_update_text">本文</string>
@@ -17,12 +21,14 @@
     <string name="tweet_reply">返信</string>
     <string name="tweet_retweet">公式RT</string>
     <string name="tweet_userretweet">非公式RT</string>
-    <string name="tweet_favorite">ふぁぼ</string>
+    <string name="tweet_create_favorite">ふぁぼ</string>
+    <string name="tweet_destroy_favorite">ふぁぼ解除</string>
     <string name="tweet_favoriteretweet">ふぁぼ＋公式RT</string>
     <string name="tweet_favoriteuserretweet">ふぁぼ＋非公式RT</string>
     <string name="tweet_share_url">URLを共有</string>
     <string name="tweet_share_url_tweet">ツイートのURLを共有</string>
     <string name="tweet_share_text">本文を共有</string>
+    <string name="tweet_delete">削除</string>
     <string name="tweet_pak">パクツイ</string>
 
     <!-- ViewerActivity -->

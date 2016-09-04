@@ -48,7 +48,7 @@ public class CheckConnectivity {
         return "";
     }
 
-    public int getWifiSpeed() {
+    public static int getWifiSpeed() {
         final Context context = App.getContext();
         if (context != null) {
             if (getConnectedType().equals("WIFI")) {

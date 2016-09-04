@@ -9,7 +9,6 @@ import java.util.regex.Pattern;
 import jp.gr.java_conf.ya.yumura.Twitter.TwitterAccess;
 import twitter4j.MediaEntity;
 import twitter4j.Status;
-import twitter4j.Twitter;
 import twitter4j.URLEntity;
 
 public class ViewString {
@@ -18,11 +17,33 @@ public class ViewString {
     public static final SimpleDateFormat sdf_yyyyMMddHHmmssSSSOnlyNumber = new SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.JAPAN);
     public static final SimpleDateFormat sdf_yyyyMMddHHmmssSSS = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS", Locale.JAPAN);
 
+    public static String getTweetFooter(final Status status) {
+        final StringBuilder sb = new StringBuilder();
+
+        try {
+            sb.append(sdf_yyyyMMddHHmmssSSS.format(status.getCreatedAt())).append(" ");
+            if (status.getRetweetCount() > 0)
+                sb.append(status.getRetweetCount()).append("RT ");
+            if (status.getFavoriteCount() > 0)
+                sb.append(status.getFavoriteCount()).append("Fav ");
+            sb.append(status.getSource().replaceAll("<[^>]+>", ""));
+
+            return sb.toString();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
     public static String getScreennameAndText(final Status status) {
         final StringBuilder sb = new StringBuilder();
 
         try {
-            sb.append("@").append(status.getUser().getScreenName()).append(" ").append(status.getText());
+            if (status.getUser() != null)
+                if (status.getUser().getScreenName() != null)
+                    sb.append("@").append(status.getUser().getScreenName()).append(": ");
+
+            if (status.getText() != null)
+                sb.append(status.getText());
 
             return sb.toString();
         } catch (Exception e) {
@@ -34,9 +55,27 @@ public class ViewString {
         final StringBuilder sb = new StringBuilder();
 
         try {
-            sb.append("@").append(status.getUser().getScreenName()).append("<br>");
-            sb.append(getTextExpanded(status)).append("<br>");
-            sb.append(sdf_yyyyMMddHHmmssSSS.format(status.getCreatedAt())).append("<br>");
+            if (status.getUser() != null) {
+                if (status.getUser().getScreenName() != null) {
+                    sb.append("@").append(status.getUser().getScreenName());
+
+                    if (status.isFavorited())
+                        sb.append("<img src=\"favorite_on\">");
+
+                    if (status.isRetweetedByMe()) {
+                        sb.append("<img src=\"retweet_on\">");
+                    } else if (status.isRetweet()) {
+                        sb.append("<img src=\"retweet_hover\">");
+                    }
+
+                    sb.append("<br>");
+                }
+            }
+
+            if (status != null) {
+                sb.append(getTextExpanded(status)).append("<br>");
+                sb.append(getTweetFooter(status));
+            }
 
             return sb.toString();
         } catch (Exception e) {
@@ -118,7 +157,7 @@ public class ViewString {
         return "<a href=\"" + href + "\"><img src=\"" + src + "\" width=\"" + Integer.toString(size.getWidth()) + "\" height=\"" + Integer.toString(size.getHeight()) + "\" ></a>";
     }
 
-    public static String getParmaLink(final Status status){
-        return TwitterAccess.URL_PROTOCOL+TwitterAccess.URL_TWITTER+"/"+status.getUser().getScreenName()+"/status/"+status.getId();
+    public static String getParmaLink(final Status status) {
+        return TwitterAccess.URL_PROTOCOL + TwitterAccess.URL_TWITTER + "/" + status.getUser().getScreenName() + "/status/" + status.getId();
     }
 }

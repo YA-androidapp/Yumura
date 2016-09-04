@@ -17,21 +17,35 @@ import jp.gr.java_conf.ya.yumura.Setting.PreferenceManage;
 
 public class ImgGetter implements Html.ImageGetter {
     View container;
+    Context context;
 
     private float pref_tl_img_zoom = 3.0f;
 
     public ImgGetter(final View t, final Context c) {
         this.container = t;
+        this.context = c;
 
         pref_tl_img_zoom = PreferenceManage.getFloat(c,"pref_tl_img_zoom", 3.0f);
     }
 
     public Drawable getDrawable(final String source) {
-        final URLDrawable urlDrawable = new URLDrawable();
-        final ImageGetterAsyncTask asyncTask =
-                new ImageGetterAsyncTask(urlDrawable);
-        asyncTask.execute(source);
-        return urlDrawable;
+        if (( source.equals("favorite") ) || ( source.equals("favorite_hover") ) || ( source.equals("favorite_on") ) || ( source.equals("reply") ) || ( source.equals("reply_hover") )
+                || ( source.equals("retweet") ) || ( source.equals("retweet_hover") ) || ( source.equals("retweet_on") )) {
+            try {
+                final int id = context.getResources().getIdentifier(source, "drawable", context.getPackageName());
+                final Drawable drawable = context.getResources().getDrawable(id);
+                drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+                return drawable;
+            } catch (final Exception e) {
+            }
+            return context.getResources().getDrawable(android.R.drawable.ic_delete);
+        } else {
+            final URLDrawable urlDrawable = new URLDrawable();
+            final ImageGetterAsyncTask asyncTask =
+                    new ImageGetterAsyncTask(urlDrawable);
+            asyncTask.execute(source);
+            return urlDrawable;
+        }
     }
 
     public class ImageGetterAsyncTask extends AsyncTask<String, Void, Drawable> {

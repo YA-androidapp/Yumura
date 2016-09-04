@@ -1,5 +1,7 @@
 package jp.gr.java_conf.ya.yumura.Twitter; // Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,7 +9,6 @@ import java.util.Map;
 
 import jp.gr.java_conf.ya.yumura.Cache.LruCacheMap;
 import jp.gr.java_conf.ya.yumura.String.ViewString;
-import jp.gr.java_conf.ya.yumura.TlActivity;
 import jp.gr.java_conf.ya.yumura.TlAdapter;
 import twitter4j.AsyncTwitter;
 import twitter4j.AsyncTwitterFactory;
@@ -21,6 +22,7 @@ import twitter4j.Twitter;
 import twitter4j.TwitterAdapter;
 import twitter4j.TwitterFactory;
 import twitter4j.TwitterListener;
+import twitter4j.User;
 import twitter4j.UserList;
 import twitter4j.auth.AccessToken;
 import twitter4j.conf.Configuration;
@@ -34,6 +36,8 @@ public class TwitterAccess {
     public static final String CONSUMER_SECRET = "CvEQUYFW5b5esg0beWo2XuR1xjJnveNQrMhd9yf64";
     public static final String URL_PROTOCOL = "https://";
     public static final String URL_TWITTER = "twitter.com";
+    private static final String URL_TWITTER_FAVORITE_1 = "i";
+    private static final String URL_TWITTER_FAVORITE_2 = "likes";
     private static final String URL_TWITTER_LIST = "lists";
     private static final String URL_TWITTER_MENTION = "mentions";
     private static final String URL_TWITTER_SEARCH = "twitter.com/search?q=";
@@ -41,12 +45,39 @@ public class TwitterAccess {
     private static Map<Map<String, String>, Long> cacheIdSnSlug = new LruCacheMap<>(100);
     private static TlAdapter adapter;
     private static final TwitterListener mListener = new TwitterAdapter() {
+
+        @Override
+        public void createdFavorite(Status status) {
+            if (adapter != null)
+                adapter.showSnackbar("Favorited", ViewString.getScreennameAndText(status));
+        }
+
+        @Override
+        public void destroyedFavorite(Status status) {
+            if (adapter != null) {
+                adapter.showSnackbar("Favorite Removed", ViewString.getScreennameAndText(status));
+            }
+        }
+
+        @Override
+        public void destroyedStatus(Status destroyedStatus) {
+            if (adapter != null) {
+                List<Status> destroyedStatuss = new ArrayList<>();
+                destroyedStatuss.add(destroyedStatus);
+                adapter.removeDataOf(destroyedStatuss);
+                adapter.notifyDataSetChanged();
+                adapter.showSnackbar("Removed", ViewString.getScreennameAndText(destroyedStatus));
+            }
+        }
+
         @Override
         public void gotHomeTimeline(final ResponseList<Status> statuses) {
             if (adapter != null) {
                 adapter.addDataOf(statuses);
                 adapter.notifyDataSetChanged();
                 adapter.notify();
+                adapter.moveToUnread();
+                adapter.showSnackbar("Loaded", Integer.toBinaryString(statuses.size())+" tweets");
             }
         }
 
@@ -55,6 +86,9 @@ public class TwitterAccess {
             if (adapter != null) {
                 adapter.addDataOf(statuses);
                 adapter.notifyDataSetChanged();
+                adapter.notify();
+                adapter.moveToUnread();
+                adapter.showSnackbar("Loaded", Integer.toBinaryString(statuses.size())+" tweets");
             }
         }
 
@@ -63,6 +97,9 @@ public class TwitterAccess {
             if (adapter != null) {
                 adapter.addDataOf(statuses);
                 adapter.notifyDataSetChanged();
+                adapter.notify();
+                adapter.moveToUnread();
+                adapter.showSnackbar("Loaded", Integer.toBinaryString(statuses.size())+" tweets");
             }
         }
 
@@ -71,7 +108,16 @@ public class TwitterAccess {
             if (adapter != null) {
                 adapter.addDataOf(statuses);
                 adapter.notifyDataSetChanged();
+                adapter.notify();
+                adapter.moveToUnread();
+                adapter.showSnackbar("Loaded", Integer.toBinaryString(statuses.size())+" tweets");
             }
+        }
+
+        @Override
+        public void retweetedStatus(Status retweetedStatus) {
+            if (adapter != null)
+                adapter.showSnackbar("Retweeted", ViewString.getScreennameAndText(retweetedStatus));
         }
 
         @Override
@@ -79,14 +125,17 @@ public class TwitterAccess {
             if (adapter != null) {
                 adapter.addDataOf(queryResult.getTweets());
                 adapter.notifyDataSetChanged();
+                adapter.notify();
+                adapter.moveToUnread();
+                adapter.showSnackbar("Loaded", Integer.toBinaryString(queryResult.getTweets().size())+" tweets");
             }
         }
 
         @Override
         public void updatedStatus(final Status status) {
-            TlActivity.showSnackbar(ViewString.getScreennameAndText(status), "updatedStatus");
+            if (adapter != null)
+                adapter.showSnackbar("Updated", ViewString.getScreennameAndText(status));
         }
-
     };
 
     public TwitterAccess(final TlAdapter adapter) {
@@ -100,23 +149,53 @@ public class TwitterAccess {
     }
 
     public static AsyncTwitter getAsyncTwitter(final String screenName) {
-        OAuthUser currentUser = (screenName.equals("")) ? KeyManage.getCurrentUser() : KeyManage.getUser(KeyManage.getIdFromScreenNameAtPreference(screenName));
+        try {
+            OAuthUser currentUser = (screenName.equals("")) ? KeyManage.getCurrentUser() : KeyManage.getUser(KeyManage.getIdFromScreenNameAtPreference(screenName));
 
-        if (currentUser == null)
-            currentUser = KeyManage.getCurrentUser();
+            if (currentUser == null)
+                currentUser = KeyManage.getCurrentUser();
 
-        if (currentUser != null) {
-            final AccessToken accessToken = new AccessToken(currentUser.token, currentUser.tokenSecret);
-            final AsyncTwitter asyncTwitter = new AsyncTwitterFactory(getConfiguration()).getInstance();
-            asyncTwitter.addListener(mListener);
-            asyncTwitter.setOAuthConsumer(currentUser.consumerKey, currentUser.consumerSecret);
-            asyncTwitter.setOAuthAccessToken(accessToken);
-            return asyncTwitter;
-        } else {
-            final AsyncTwitter asyncTwitter = new AsyncTwitterFactory(getConfiguration()).getInstance();
-            asyncTwitter.addListener(mListener);
-            return asyncTwitter;
+            if (currentUser != null) {
+                final AccessToken accessToken = new AccessToken(currentUser.token, currentUser.tokenSecret);
+                final AsyncTwitter asyncTwitter = new AsyncTwitterFactory(getConfiguration(currentUser.consumerKey, currentUser.consumerSecret)).getInstance(accessToken);
+                asyncTwitter.addListener(mListener);
+                return asyncTwitter;
+            }
+        } catch (Exception e) {
+            Log.v("Yumura", e.getMessage());
         }
+
+        final AsyncTwitter asyncTwitter = new AsyncTwitterFactory(getConfiguration(CONSUMER_KEY, CONSUMER_SECRET)).getInstance();
+        asyncTwitter.addListener(mListener);
+        return asyncTwitter;
+    }
+
+    public static Configuration getConfiguration(final String consumerKey, final String consumerSecret) {
+        final ConfigurationBuilder cb = new ConfigurationBuilder();
+        cb.setOAuthConsumerKey(consumerKey);
+        cb.setOAuthConsumerSecret(consumerSecret);
+        cb.setHttpConnectionTimeout(30 * 1000);   // HTTP接続タイムアウト 20000
+        cb.setHttpReadTimeout(30 * 1000);         // HTTPリードタイムアウト 120000
+        cb.setHttpRetryCount(2);                // HTTPリトライ回数	0
+        cb.setHttpRetryIntervalSeconds(30);     // HTTPリトライ間隔 5
+
+        return cb.build();
+    }
+
+    public static Status getStatusJustBefore(final String screenName) {
+        if (!screenName.equals("")) {
+            try {
+                User user = getTwitter(screenName).showUser(screenName);
+                Status status = user.getStatus();
+                status = getTwitter(screenName).showStatus(status.getId());
+                if (status != null)
+                    return status;
+            } catch (Exception e) {
+                Log.v("Yumura", e.getMessage());
+            }
+        }
+
+        return null;
     }
 
     public static Twitter getTwitter() {
@@ -124,30 +203,220 @@ public class TwitterAccess {
     }
 
     public static Twitter getTwitter(final String screenName) {
-        OAuthUser currentUser = (screenName.equals("")) ? KeyManage.getCurrentUser() : KeyManage.getUser(KeyManage.getIdFromScreenNameAtPreference(screenName));
+        try {
+            OAuthUser currentUser = (screenName.equals("")) ? KeyManage.getCurrentUser() : KeyManage.getUser(KeyManage.getIdFromScreenNameAtPreference(screenName));
 
-        if (currentUser == null)
-            currentUser = KeyManage.getCurrentUser();
+            if (currentUser == null)
+                currentUser = KeyManage.getCurrentUser();
 
-        if (currentUser != null) {
-            final AccessToken accessToken = new AccessToken(currentUser.token, currentUser.tokenSecret);
-            final Twitter twitter = TwitterFactory.getSingleton();
-            twitter.setOAuthConsumer(currentUser.consumerKey, currentUser.consumerSecret);
-            twitter.setOAuthAccessToken(accessToken);
-            return twitter;
-        } else {
-            return TwitterFactory.getSingleton();
+            if (currentUser != null) {
+                final AccessToken accessToken = new AccessToken(currentUser.token, currentUser.tokenSecret);
+                final Twitter twitter = new TwitterFactory(getConfiguration(currentUser.consumerKey, currentUser.consumerSecret)).getInstance(accessToken);
+                return twitter;
+            }
+        } catch (Exception e) {
+            Log.v("Yumura", e.getMessage());
+        }
+
+        return (new TwitterFactory(getConfiguration(CONSUMER_KEY, CONSUMER_SECRET))).getSingleton();
+    }
+
+    public static Status showStatus(final long id) {
+        if (id > -1) {
+            try {
+                return getTwitter().showStatus(id);
+            } catch (Exception e) {
+                try {
+                    Log.v("Yumura", e.getMessage());
+                } catch (Exception ex) {
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public void createFavorite(final String screenName, final Status status) {
+        if (status != null) {
+            try {
+                getAsyncTwitter(screenName).createFavorite(status.getId());
+            } catch (Exception e) {
+                Log.v("Yumura", e.getMessage());
+            }
         }
     }
 
-    public static Configuration getConfiguration() {
-        final ConfigurationBuilder cb = new ConfigurationBuilder();
-        cb.setHttpConnectionTimeout(30 * 1000);   // HTTP接続タイムアウト 20000
-        cb.setHttpReadTimeout(30 * 1000);         // HTTPリードタイムアウト 120000
-        cb.setHttpRetryCount(2);                // HTTPリトライ回数	0
-        cb.setHttpRetryIntervalSeconds(30);     // HTTPリトライ間隔 5
+    public void destroyFavorite(final String screenName, final Status status) {
+        if (status != null) {
+            try {
+                getAsyncTwitter(screenName).destroyFavorite(status.getId());
+            } catch (Exception e) {
+                Log.v("Yumura", e.getMessage());
+            }
+        }
+    }
 
-        return cb.build();
+    public void destroyStatus(final String screenName, final Status status) {
+        if (status != null) {
+            try {
+                getAsyncTwitter(screenName).destroyStatus(status.getId());
+            } catch (Exception e) {
+                Log.v("Yumura", e.getMessage());
+            }
+        }
+    }
+
+    private void getFavorites(final int count, final long maxId, final int page, final long sinceId, final String authUser) {
+        final Paging paging = new Paging();
+        if (count > -1)
+            paging.setCount(count);
+        if (maxId > -1)
+            paging.setMaxId(maxId);
+        if (page > -1)
+            paging.setPage(page);
+        if (sinceId > -1)
+            paging.setSinceId(sinceId);
+        getAsyncTwitter(authUser).getFavorites(paging);
+//        Log.v("Yumura", "getFavorites(" + paging.toString() + ")");
+    }
+
+    private void getHomeTimeline(final int count, final long maxId, final int page, final long sinceId, final String authUser) {
+        final Paging paging = new Paging();
+        if (count > -1)
+            paging.setCount(count);
+        if (maxId > -1)
+            paging.setMaxId(maxId);
+        if (page > -1)
+            paging.setPage(page);
+        if (sinceId > -1)
+            paging.setSinceId(sinceId);
+        getAsyncTwitter(authUser).getHomeTimeline(paging);
+//        Log.v("Yumura", "getHomeTimeline(" + paging.toString() + ")");
+    }
+
+    private long getIdFromScreenName(final String screenName) {
+        long cachedId = -1L;
+        try {
+            cachedId = cacheIdSn.get(screenName);
+        } catch (Exception e) {
+        }
+        if (cachedId > -1) {
+            // キャッシュにある場合
+            return cachedId;
+        } else {
+            // キャッシュにない場合
+            long userId = KeyManage.getIdFromScreenNameAtPreference(screenName);
+            if (userId < 0) {
+                try {
+                    cacheIdSn.put(screenName, getTwitter().showUser(screenName).getId());
+                } catch (Exception e) {
+                }
+                try {
+                    return getTwitter().showUser(screenName).getId();
+                } catch (Exception e) {
+                }
+            }
+        }
+        return -1L;
+    }
+
+    private long getListIdFromSlug(String screenName, final String slug) {
+        if ((screenName == null) || (screenName.equals(""))) {
+            screenName = KeyManage.getCurrentUser().screenName;
+        }
+
+        final Map<String, String> keys = new HashMap<>();
+        keys.put(screenName, slug);
+
+        long cachedListId = -1L;
+        try {
+            cachedListId = cacheIdSnSlug.get(keys);
+        } catch (Exception e) {
+        }
+        if (cachedListId > -1) {
+            // キャッシュにある場合
+            return cachedListId;
+        } else {
+            // キャッシュにない場合
+            final Twitter twitter = getTwitter(screenName);
+
+            ResponseList<UserList> lists = null;
+            try {
+                lists = twitter.getUserLists(screenName);
+            } catch (Exception e) {
+                Log.v("Yumura", e.getMessage());
+            }
+            if (lists.size() > 0) {
+                for (UserList list : lists) {
+                    if (list.getName().equals(slug)) {
+                        try {
+                            cacheIdSnSlug.put(keys, list.getId());
+                        } catch (Exception e) {
+                            Log.v("Yumura", e.getMessage());
+                        }
+                        try {
+                            return list.getId();
+                        } catch (Exception e) {
+                            Log.v("Yumura", e.getMessage());
+                        }
+                    }
+                }
+            }
+        }
+
+        return -1L;
+    }
+
+    private void getMentions(final int count, final long maxId, final int page, final long sinceId, final String authUser) {
+        final Paging paging = new Paging();
+        if (count > -1)
+            paging.setCount(count);
+        if (maxId > -1)
+            paging.setMaxId(maxId);
+        if (page > -1)
+            paging.setPage(page);
+        if (sinceId > -1)
+            paging.setSinceId(sinceId);
+        getAsyncTwitter(authUser).getMentions(paging);
+//        Log.v("Yumura", "getMentions(" + paging.toString() + ")");
+    }
+
+    private void getUserTimeline(final String screenName, final int count, final long maxId, final int page, final long sinceId) {
+        final Paging paging = new Paging();
+        if (count > -1)
+            paging.setCount(count);
+        if (maxId > -1)
+            paging.setMaxId(maxId);
+        if (page > -1)
+            paging.setPage(page);
+        if (sinceId > -1)
+            paging.setSinceId(sinceId);
+        getAsyncTwitter().getUserTimeline(screenName, paging);
+//        Log.v("Yumura", "getUserTimeline(" + paging.toString() + ")");
+    }
+
+    private void getUserListStatuses(final String screenName, final String slug, final int count, final long maxId, final int page, final long sinceId) {
+        new Thread(new Runnable() {
+            @Override
+            public final void run() {
+                // final long userId = getIdFromScreenName(screenName);
+                final long listId = getListIdFromSlug(screenName, slug);
+                if (listId > -1) {
+                    final Paging paging = new Paging();
+                    if (count > -1)
+                        paging.setCount(count);
+                    if (maxId > -1)
+                        paging.setMaxId(maxId);
+                    if (page > -1)
+                        paging.setPage(page);
+                    if (sinceId > -1)
+                        paging.setSinceId(sinceId);
+                    // getAsyncTwitter().getUserListStatuses(userId, slug, paging);
+                    getAsyncTwitter().getUserListStatuses(listId, paging);
+//                    Log.v("Yumura", "getUserTimeline(" + paging.toString() + ")");
+                }
+            }
+        }).start();
     }
 
     public String[] loadTimeline(final String url, final int count, final long maxId, final int page, final long sinceId) {
@@ -205,7 +474,14 @@ public class TwitterAccess {
                             getUserTimeline(screenName, count, maxId, page, sinceId);
                         }
                         break;
-                        //TODO https://twitter.com/i/likes
+                    } else if ((uSplitBySlash.length > 2)
+                            && (uSplitBySlash.length < 5)
+                            && (uSplitBySlash[1].equals(URL_TWITTER_FAVORITE_1))
+                            && (uSplitBySlash[2].equals(URL_TWITTER_FAVORITE_2))) {
+//                            Log.v("Yumura", "loadTimeline(" + url + ") ふぁぼ u:" + u);
+                        // "twitter.com/i/likes"
+                        getFavorites(count, maxId, page, sinceId, authUser);
+                        break;
                     } else if ((uSplitBySlash.length >= 4) && (uSplitBySlash[2].equals(URL_TWITTER_LIST))) {
 //                        Log.v("Yumura", "loadTimeline(" + url + ") リスト u:" + u);
                         // "twitter.com/foobar/lists/hoge"
@@ -221,148 +497,24 @@ public class TwitterAccess {
         return result.toArray(new String[0]);
     }
 
-    private void getHomeTimeline(final int count, final long maxId, final int page, final long sinceId, final String authUser) {
-        final Paging paging = new Paging();
-        if (count > -1)
-            paging.setCount(count);
-        if (maxId > -1)
-            paging.setMaxId(maxId);
-        if (page > -1)
-            paging.setPage(page);
-        if (sinceId > -1)
-            paging.setSinceId(sinceId);
-        getAsyncTwitter(authUser).getHomeTimeline(paging);
-//        Log.v("Yumura", "getHomeTimeline(" + paging.toString() + ")");
-    }
-
-    private void getMentions(final int count, final long maxId, final int page, final long sinceId, final String authUser) {
-        final Paging paging = new Paging();
-        if (count > -1)
-            paging.setCount(count);
-        if (maxId > -1)
-            paging.setMaxId(maxId);
-        if (page > -1)
-            paging.setPage(page);
-        if (sinceId > -1)
-            paging.setSinceId(sinceId);
-        getAsyncTwitter(authUser).getMentions(paging);
-//        Log.v("Yumura", "getMentions(" + paging.toString() + ")");
-    }
-
-    private void getUserTimeline(final String screenName, final int count, final long maxId, final int page, final long sinceId) {
-        final Paging paging = new Paging();
-        if (count > -1)
-            paging.setCount(count);
-        if (maxId > -1)
-            paging.setMaxId(maxId);
-        if (page > -1)
-            paging.setPage(page);
-        if (sinceId > -1)
-            paging.setSinceId(sinceId);
-        getAsyncTwitter().getUserTimeline(screenName, paging);
-//        Log.v("Yumura", "getUserTimeline(" + paging.toString() + ")");
-    }
-
-    private long getIdFromScreenName(final String screenName) {
-        long cachedId = -1L;
-        try {
-            cachedId = cacheIdSn.get(screenName);
-        } catch (Exception e) {
-        }
-        if (cachedId > -1) {
-            // キャッシュにある場合
-            return cachedId;
-        } else {
-            // キャッシュにない場合
-            long userId = KeyManage.getIdFromScreenNameAtPreference(screenName);
-            if (userId < 0) {
-                try {
-                    cacheIdSn.put(screenName, getTwitter().showUser(screenName).getId());
-                } catch (Exception e) {
-                }
-                try {
-                    return getTwitter().showUser(screenName).getId();
-                } catch (Exception e) {
-                }
-            }
-        }
-        return -1L;
-    }
-
-    private long getListIdFromSlug(String screenName, final String slug) {
-//        Log.v("Yumura", "getListIdFromSlug(" + screenName + ", " + slug + ")");
-
-        if ((screenName == null) || (screenName.equals(""))) {
-            screenName = KeyManage.getCurrentUser().screenName;
-        }
-
-        final Map<String, String> keys = new HashMap<>();
-        keys.put(screenName, slug);
-
-        long cachedListId = -1L;
-        try {
-            cachedListId = cacheIdSnSlug.get(keys);
-        } catch (Exception e) {
-        }
-        if (cachedListId > -1) {
-            // キャッシュにある場合
-            return cachedListId;
-        } else {
-            // キャッシュにない場合
-            final Twitter twitter = getTwitter(screenName);
-//            Log.v("Yumura", "twitter: " + twitter.toString());
-
-            ResponseList<UserList> lists = null;
+    public void pak(final String screenName, final Status status) {
+        if (status != null) {
             try {
-                lists = twitter.getUserLists(screenName);
-//                Log.v("Yumura", "getUserLists");
+                getAsyncTwitter(screenName).updateStatus(status.getText());
             } catch (Exception e) {
-//                Log.v("Yumura", e.getMessage() + e.toString());
-            }
-//            Log.v("Yumura", "getListIdFromSlug() size: " + lists.toString());
-            if (lists.size() > 0) {
-//                Log.v("Yumura", "getListIdFromSlug() size: " + lists.size());
-                for (UserList list : lists) {
-//                    Log.v("Yumura", "getListIdFromSlug() " + list.getId() + ": " + list.getName() + ": " + list.getFullName());
-                    if (list.getName().equals(slug)) {
-                        try {
-                            cacheIdSnSlug.put(keys, list.getId());
-                        } catch (Exception e) {
-                        }
-                        try {
-                            return list.getId();
-                        } catch (Exception e) {
-                        }
-                    }
-                }
+                Log.v("Yumura", e.getMessage());
             }
         }
-
-        return -1L;
     }
 
-    private void getUserListStatuses(final String screenName, final String slug, final int count, final long maxId, final int page, final long sinceId) {
-        new Thread(new Runnable() {
-            @Override
-            public final void run() {
-                // final long userId = getIdFromScreenName(screenName);
-                final long listId = getListIdFromSlug(screenName, slug);
-                if (listId > -1) {
-                    final Paging paging = new Paging();
-                    if (count > -1)
-                        paging.setCount(count);
-                    if (maxId > -1)
-                        paging.setMaxId(maxId);
-                    if (page > -1)
-                        paging.setPage(page);
-                    if (sinceId > -1)
-                        paging.setSinceId(sinceId);
-                    // getAsyncTwitter().getUserListStatuses(userId, slug, paging);
-                    getAsyncTwitter().getUserListStatuses(listId, paging);
-//                    Log.v("Yumura", "getUserTimeline(" + paging.toString() + ")");
-                }
+    public void retweet(final String screenName, final Status status) {
+        if (status != null) {
+            try {
+                getAsyncTwitter(screenName).retweetStatus(status.getId());
+            } catch (Exception e) {
+                Log.v("Yumura", e.getMessage());
             }
-        }).start();
+        }
     }
 
     private void search(final int count, final long maxId, String text, final long sinceId) {
@@ -381,56 +533,32 @@ public class TwitterAccess {
         }
     }
 
-    public void updateStatus(final String updateText) {
-        if (!updateText.equals("")) {
+    public void updateStatus(final String screenName, final String statusText) {
+        if ((!screenName.equals("")) && (!statusText.equals(""))) {
             try {
-                getAsyncTwitter().updateStatus(updateText);
+                getAsyncTwitter(screenName).updateStatus(statusText);
             } catch (Exception e) {
+                Log.v("Yumura", e.getMessage());
             }
         }
     }
 
-    public void updateStatus(final StatusUpdate statusUpdate) {
-        if (statusUpdate != null) {
+    public void updateStatus(final String screenName, final StatusUpdate statusUpdate) {
+        if ((!screenName.equals("")) && (statusUpdate != null)) {
             try {
-                getAsyncTwitter().updateStatus(statusUpdate);
+                getAsyncTwitter(screenName).updateStatus(statusUpdate);
             } catch (Exception e) {
+                Log.v("Yumura", e.getMessage());
             }
         }
     }
 
-    public void retweet(final Status status) {
+    public void userRetweet(final String screenName, final Status status) {
         if (status != null) {
             try {
-                getAsyncTwitter().retweetStatus(status.getId());
+                getAsyncTwitter(screenName).updateStatus("RT " + ViewString.getScreennameAndText(status));
             } catch (Exception e) {
-            }
-        }
-    }
-
-    public void userRetweet(final Status status) {
-        if (status != null) {
-            try {
-                getAsyncTwitter().updateStatus("RT "+ViewString.getScreennameAndText(status));
-            } catch (Exception e) {
-            }
-        }
-    }
-
-    public void favorite(final Status status) {
-        if (status != null) {
-            try {
-                getAsyncTwitter().createFavorite(status.getId());
-            } catch (Exception e) {
-            }
-        }
-    }
-
-    public void pak(final Status status) {
-        if (status != null) {
-            try {
-                getAsyncTwitter().updateStatus(status.getText());
-            } catch (Exception e) {
+                Log.v("Yumura", e.getMessage());
             }
         }
     }
