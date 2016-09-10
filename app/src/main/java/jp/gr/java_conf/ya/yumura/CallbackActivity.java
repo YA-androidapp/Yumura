@@ -26,14 +26,14 @@ public class CallbackActivity extends Activity {
             if (uri != null && uri.toString().startsWith(TwitterAccess.CALLBACK_URL)) {
                 final String verifier = uri.getQueryParameter(TwitterAccess.CALLBACK_URL_VERIFIER);
                 final String[] savedConsumerKeyAndSecret = KeyManage.loadCurrentConsumerKeyAndSecret();
-//                Log.v("Yumura","loadCurrentConsumerKeyAndSecret: "+savedConsumerKeyAndSecret[0]+" , "+savedConsumerKeyAndSecret[1]);
+               // Log.v("Yumura","loadCurrentConsumerKeyAndSecret: "+savedConsumerKeyAndSecret[0]+" , "+savedConsumerKeyAndSecret[1]);
 
                 new Thread(new Runnable() {
                     @Override
                     public final void run() {
-//                    runOnUiThread(new Runnable() {
-//                        @Override
-//                        public final void run() {
+                 // runOnUiThread(new Runnable() {
+                       // @Override
+                       // public final void run() {
                         try {
                             AccessToken accessToken = TlActivity.oAuthAuthorization.getOAuthAccessToken(TlActivity.requestToken, verifier);
                             KeyManage.addUser(new OAuthUser(accessToken.getScreenName(), savedConsumerKeyAndSecret[0],savedConsumerKeyAndSecret[1], accessToken.getScreenName(), accessToken.getToken(), accessToken.getTokenSecret(), accessToken.getUserId()));
@@ -41,10 +41,10 @@ public class CallbackActivity extends Activity {
                             final Intent i = new Intent(getApplicationContext(),TlActivity.class);
                             startActivity(i);
                         } catch (Exception e) {
-//                            Log.v("Yumura",e.getMessage());
+                           // Log.v("Yumura",e.getMessage());
                         }
-//                        }
-//                    });
+                       // }
+                   // });
                     }
                 }).start();
             }

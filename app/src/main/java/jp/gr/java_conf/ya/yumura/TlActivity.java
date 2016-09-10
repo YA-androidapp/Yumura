@@ -21,9 +21,14 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 import jp.gr.java_conf.ya.yumura.Layout.EndlessScrollListener;
 import jp.gr.java_conf.ya.yumura.Layout.LinearLayoutManagerWithSmoothScroller;
@@ -35,6 +40,7 @@ import jp.gr.java_conf.ya.yumura.String.ViewString;
 import jp.gr.java_conf.ya.yumura.Time.Time;
 import jp.gr.java_conf.ya.yumura.Twitter.BinarySearchUtil;
 import jp.gr.java_conf.ya.yumura.Twitter.KeyManage;
+import jp.gr.java_conf.ya.yumura.Twitter.OAuthUser;
 import jp.gr.java_conf.ya.yumura.Twitter.TwitterAccess;
 import twitter4j.Status;
 import twitter4j.StatusUpdate;
@@ -45,9 +51,15 @@ public class TlActivity extends AppCompatActivity {
     public static OAuthAuthorization oAuthAuthorization;
 
     public static RequestToken requestToken;
-    private static String preSearchtweetString = "";
-    private Date preOnLoadMoreTime = new Date();
-    private Date preSwipeRefreshTime = new Date();
+
+    public static String KEY_ENTER_URL = "EnterUrl";
+    public static String KEY_URL_ITEMS = "UrlItems";
+
+    private static String[] autoCompleteItems_EnterUrl;
+
+    private static Date preGetAutoCompleteItems_EnterUrl = new Date(0);
+    private Date preOnLoadMoreTime = new Date(0);
+    private Date preSwipeRefreshTime = new Date(0);
     private int pref_tl_api_count = 200;
     private RecyclerView recyclerView;
     private SwipeRefreshLayout swipeRefresh;
@@ -67,6 +79,45 @@ public class TlActivity extends AppCompatActivity {
             return false;
         }
     };
+
+    public static String[] getAutoCompleteItems_EnterUrl() {
+        if ((autoCompleteItems_EnterUrl != null)
+                && (autoCompleteItems_EnterUrl.length > 0)
+                && (Time.differenceMinutes(preGetAutoCompleteItems_EnterUrl) > 10)) {
+            preGetAutoCompleteItems_EnterUrl = new Date();
+            return autoCompleteItems_EnterUrl;
+        } else {
+            List<String> items = new ArrayList<>();
+            for (OAuthUser oAuthUser : KeyManage.getUsers()) {
+                // ホームTL
+                items.add(TwitterAccess.URL_PROTOCOL + TwitterAccess.URL_TWITTER
+                        + "#" + oAuthUser.screenName);
+
+                // リプライ
+                items.add(TwitterAccess.URL_PROTOCOL + TwitterAccess.URL_TWITTER
+                        + "/" + TwitterAccess.URL_TWITTER_MENTION + "#" + oAuthUser.screenName);
+
+                // ユーザTL
+                items.add(TwitterAccess.URL_PROTOCOL + TwitterAccess.URL_TWITTER
+                        + "/" + oAuthUser.screenName);
+
+                // ふぁぼ
+                items.add(TwitterAccess.URL_PROTOCOL + TwitterAccess.URL_TWITTER
+                        + "/" + TwitterAccess.URL_TWITTER_FAVORITE_1 + "/" + TwitterAccess.URL_TWITTER_FAVORITE_2
+                        + "#" + oAuthUser.screenName);
+
+                items.add(TwitterAccess.URL_PROTOCOL + TwitterAccess.URL_TWITTER_SEARCH);
+
+                for (String listUrl : TwitterAccess.getUserListUrls(oAuthUser.screenName)) {
+                    items.add(listUrl);
+                }
+            }
+            Collections.sort(items);
+
+            autoCompleteItems_EnterUrl = items.toArray(new String[0]);
+            return autoCompleteItems_EnterUrl;
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -92,7 +143,11 @@ public class TlActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.action_delJustBefore) {
+
+        if (id == R.id.action_enter_url) {
+            enterUrl();
+            return true;
+        } else if (id == R.id.action_delJustBefore) {
             delJustBefore();
             return true;
         } else if (id == R.id.action_makeShortcut) {
@@ -172,7 +227,7 @@ public class TlActivity extends AppCompatActivity {
                                         new Thread(new Runnable() {
                                             @Override
                                             public final void run() {
-                                                adapter = new TlAdapter(TlActivity.this, recyclerView);
+                                                // adapter = new TlAdapter(TlActivity.this, recyclerView);
                                                 TwitterAccess twitterAccess = new TwitterAccess(adapter);
                                                 twitterAccess.destroyStatus(KeyManage.getCurrentUser().screenName, status);
                                             }
@@ -212,6 +267,30 @@ public class TlActivity extends AppCompatActivity {
         }
     }
 
+    private final void enterUrl() {
+        try {
+            new Thread(new Runnable() {
+                @Override
+                public final void run() {
+                    final Bundle args = new Bundle();
+                    args.putString(KEY_ENTER_URL, searchViewString);
+                    args.putStringArray(KEY_URL_ITEMS, getAutoCompleteItems_EnterUrl());
+                    final DialogFragment_EnterUrl dialogFragment_EnterUrl = new DialogFragment_EnterUrl();
+                    dialogFragment_EnterUrl.setArguments(args);
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public final void run() {
+                            dialogFragment_EnterUrl.show(getSupportFragmentManager(), getString(R.string.action_enter_url));
+                        }
+                    });
+                }
+            }).start();
+        } catch (Exception e) {
+            Log.v("Yumura", e.getMessage());
+        }
+    }
+
     private final void makeShortcut(final String url) {
         final Intent shortcutIntent = uriStringToIntent(url);
 
@@ -227,7 +306,7 @@ public class TlActivity extends AppCompatActivity {
         long lastReadTweet = -1;
         lastReadTweet = PreferenceManage.getLong(this, PreferenceManage.Last_Read_Tweet, 0);
         Log.v("Yumura", "lastReadTweet: " + Long.toString(lastReadTweet));
-        if (lastReadTweet > 0){
+        if (lastReadTweet > 0) {
 
             Log.v("Yumura", "id[0]: " + adapter.getItemId(0));
             Log.v("Yumura", "id[adapter.getItemCount()-1]: " + adapter.getItemId(adapter.getItemCount() - 1));
@@ -249,21 +328,25 @@ public class TlActivity extends AppCompatActivity {
             @Override
             public void onLoadMore(int page) {
                 swipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
-                if (!swipeRefresh.isRefreshing()) {
-                    if (Time.differenceMinutes(preOnLoadMoreTime) > 0) {
-                        changeRefreshLayoutIcon(true);
+                if (Time.differenceMinutes(preOnLoadMoreTime) > 0) {
+                    changeRefreshLayoutIcon(true);
 
-                        if (twitterAccess == null)
-                            twitterAccess = new TwitterAccess(adapter);
+                    if (twitterAccess == null)
+                        twitterAccess = new TwitterAccess(adapter);
 
+                    if (adapter.getItemCount() < 1) {
+                        twitterAccess.loadTimeline(searchViewString, pref_tl_api_count, -1, -1, -1);
+                    } else {
                         try {
-                            twitterAccess.loadTimeline(searchViewString, pref_tl_api_count, adapter.getList().get(adapter.getItemCount() - 1).getId() - 1, -1, -1);
+                            twitterAccess.loadTimeline(searchViewString, pref_tl_api_count,
+                                    adapter.getList().get(adapter.getItemCount() - 1).getId(), -1, -1);
                         } catch (Exception e) {
+                            Log.w("Yumura", e.getMessage());
                             twitterAccess.loadTimeline(searchViewString, pref_tl_api_count, -1, -1, -1);
                         }
-
-                        preOnLoadMoreTime = new Date();
                     }
+
+                    preOnLoadMoreTime = new Date();
                 }
                 changeRefreshLayoutIcon(false);
             }
@@ -271,7 +354,7 @@ public class TlActivity extends AppCompatActivity {
     }
 
     private final boolean setSearchWord(final String searchWord) {
-//        Log.v("Yumura", "setSearchWord("+searchWord+")");
+        Log.v("Yumura", "setSearchWord(" + searchWord + ")");
         try {
             final ActionBar actionBar = getSupportActionBar();
             actionBar.setTitle(searchWord);
@@ -279,23 +362,33 @@ public class TlActivity extends AppCompatActivity {
             if (searchWord != null && !searchWord.equals("")) {
                 if (CheckConnectivity.isConnected()) {
                     if (searchViewString.equals(searchWord)) {
+                        Log.v("Yumura", "(searchViewString.equals(" + searchWord + "))");
                         if (KeyManage.getUserCount() > 0) {
                             twitterAccess = new TwitterAccess(adapter);
-                            try {
-                                twitterAccess.loadTimeline(searchViewString, pref_tl_api_count, -1, -1, adapter.getList().get(0).getId() + 1);
-                            } catch (Exception e) {
+                            if (adapter.getItemCount() < 1) {
                                 twitterAccess.loadTimeline(searchViewString, pref_tl_api_count, -1, -1, -1);
+                            } else {
+                                try {
+                                    twitterAccess.loadTimeline(searchViewString, pref_tl_api_count,
+                                            -1, -1, adapter.getList().get(0).getId() + 1);
+                                } catch (Exception e) {
+                                    twitterAccess.loadTimeline(searchViewString, pref_tl_api_count, -1, -1, -1);
+                                }
                             }
                             adapter.notifyDataSetChanged();
                         }
                     } else {
+                        Log.v("Yumura", "!(searchViewString.equals(" + searchWord + "))");
                         searchViewString = searchWord;
                         if (KeyManage.getUserCount() > 0) {
+                            Log.v("Yumura", "(KeyManage.getUserCount() > 0)");
                             adapter.clearData();
                             adapter.notifyDataSetChanged();
+
                             twitterAccess = new TwitterAccess(adapter);
                             twitterAccess.loadTimeline(searchViewString, pref_tl_api_count, -1, -1, -1);
                             adapter.notifyDataSetChanged();
+                            Log.v("Yumura", "notifyDataSetChanged()");
                         }
                     }
                     changeRefreshLayoutIcon(false);
@@ -332,18 +425,21 @@ public class TlActivity extends AppCompatActivity {
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                if (!swipeRefresh.isRefreshing()) {
-                    if (Time.differenceMinutes(preSwipeRefreshTime) > 0) {
-                        if (twitterAccess == null)
-                            twitterAccess = new TwitterAccess(adapter);
-                        try {
-                            twitterAccess.loadTimeline(searchViewString, pref_tl_api_count, -1, -1, adapter.getList().get(0).getId() + 1);
-                        } catch (Exception e) {
-                            twitterAccess.loadTimeline(searchViewString, pref_tl_api_count, -1, -1, -1);
-                        }
-
-                        preSwipeRefreshTime = new Date();
+                Log.v("Yumura", "onRefresh()");
+                Log.v("Yumura", "Time.differenceMinutes(preSwipeRefreshTime): "
+                        + Integer.toString(Time.differenceMinutes(preSwipeRefreshTime)));
+                if (Time.differenceMinutes(preSwipeRefreshTime) > 0) {
+                    if (twitterAccess == null)
+                        twitterAccess = new TwitterAccess(adapter);
+                    try {
+                        Log.v("Yumura", "loadTimeline(" + searchViewString + ", " + Integer.toString(pref_tl_api_count) + ", -1, -1, " + Long.toString(adapter.getList().get(0).getId() + 1) + ")");
+                        twitterAccess.loadTimeline(searchViewString, pref_tl_api_count, -1, -1, adapter.getList().get(0).getId() + 1);
+                    } catch (Exception e) {
+                        Log.w("Yumura", e.getMessage());
+                        twitterAccess.loadTimeline(searchViewString, pref_tl_api_count, -1, -1, -1);
                     }
+
+                    preSwipeRefreshTime = new Date();
                 }
                 changeRefreshLayoutIcon(false);
             }
@@ -419,6 +515,44 @@ public class TlActivity extends AppCompatActivity {
         }
     }
 
+    public static class DialogFragment_EnterUrl extends DialogFragment {
+        private AutoCompleteTextView editText;
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            final Bundle bundle = getArguments();
+            final String urlString = bundle.getString(KEY_ENTER_URL);
+            final String[] urlItems = bundle.getStringArray(KEY_URL_ITEMS);
+
+            editText = new AutoCompleteTextView(getActivity());
+
+            if ((autoCompleteItems_EnterUrl != null) && (autoCompleteItems_EnterUrl.length > 0)) {
+                ArrayAdapter<String> stringArrayAdapter
+                        = new ArrayAdapter<>(getActivity(), android.R.layout.simple_dropdown_item_1line, urlItems);
+                editText.setAdapter(stringArrayAdapter);
+            }
+            editText.setHint(R.string.action_enter_url);
+            editText.setText(urlString);
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setTitle(R.string.action_enter_url);
+            builder.setView(editText);
+            builder.setPositiveButton(R.string.action_enter_url,
+                    new DialogInterface.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if ((editText != null) && (!editText.getText().toString().equals(""))) {
+                                final TlActivity activity = (TlActivity) getActivity();
+                                activity.searchView.setQuery(editText.getText().toString(), true);
+                                activity.searchViewString = editText.getText().toString();
+                            }
+                        }
+                    });
+            return builder.create();
+        }
+    }
+
     public static class DialogFragment_UpdateStatus extends DialogFragment {
         private EditText editText;
         private TlAdapter adapter;
@@ -439,11 +573,12 @@ public class TlActivity extends AppCompatActivity {
                         public void onClick(DialogInterface dialog, int which) {
                             if ((editText != null) && (!editText.getText().toString().equals(""))) {
                                 try {
-                                    adapter = new TlAdapter(getActivity(), null);
+                                    adapter = ((TlActivity) getActivity()).adapter;
                                     final TwitterAccess twitterAccess = new TwitterAccess(adapter);
                                     final StatusUpdate statusUpdate = new StatusUpdate(editText.getText().toString());
                                     twitterAccess.updateStatus(menuItemArray[which].replace("@", ""), statusUpdate);
                                 } catch (Exception e) {
+                                    Log.e("Yumura", e.getMessage());
                                 }
                             }
                         }

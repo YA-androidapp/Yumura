@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.view.MenuItemCompat;
@@ -18,20 +17,29 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLEncoder;
-import java.util.Iterator;
 
 import jp.gr.java_conf.ya.yumura.Network.CheckConnectivity;
+import jp.gr.java_conf.ya.yumura.Setting.PreferenceManage;
 import jp.gr.java_conf.ya.yumura.String.IntentString;
 import jp.gr.java_conf.ya.yumura.Twitter.KeyManage;
 import jp.gr.java_conf.ya.yumura.Twitter.TwitterAccess;
 
-//TODO
 public class ViewerActivity extends AppCompatActivity {
 
+    public static String KEY_UPDATE_TEXT = "updateText";
+
     private static String GOOGLE_SEARCH_URL = "https://www.google.co.jp/search?q=";
+    private static String BLANK_URL = "about:blank";
 
     private SearchView searchView;
+    private String searchViewString = "";
+    private String pref_webview_custom_useragent = "";
+    private WebView webView;
+    private boolean pref_webview_js_enabled = false;
+    private boolean pref_webview_urlcheck_enabled = true;
     private SearchView.OnQueryTextListener onQueryTextListener = new SearchView.OnQueryTextListener() {
         @Override
         public boolean onQueryTextSubmit(String searchWord) {
@@ -44,50 +52,18 @@ public class ViewerActivity extends AppCompatActivity {
         }
     };
 
-    private String searchViewString;
-
-    private WebView webView;
-
-    public static class DialogFragment_UpdateStatus extends DialogFragment {
-        private EditText editText;
-        private TlAdapter adapter;
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            final Bundle bundle = getArguments();
-            final String updateText = bundle.getString("updateText");
-
-            editText = new EditText(getActivity());
-            editText.setHint(R.string.action_update_text);
-            editText.setText(updateText);
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setTitle(R.string.action_update);
-            builder.setView(editText);
-            builder.setPositiveButton(R.string.action_update,
-                    new DialogInterface.OnClickListener() {
-
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if ((editText != null) && (!editText.getText().toString().equals(""))) {
-                                adapter = new TlAdapter(getActivity(),null);
-                                TwitterAccess twitterAccess = new TwitterAccess(adapter);
-                                twitterAccess.updateStatus(KeyManage.getCurrentUser().screenName,editText.getText().toString());
-                            }
-                        }
-                    });
-            return builder.create();
-        }
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        pref_webview_js_enabled = PreferenceManage.getBoolean(this, "pref_webview_js_enabled", false);
+        pref_webview_urlcheck_enabled = PreferenceManage.getBoolean(this, "pref_webview_urlcheck_enabled", false);
+        pref_webview_custom_useragent = PreferenceManage.getString(this, "pref_webview_custom_useragent", "");
+
         new Thread(new Runnable() {
             @Override
             public final void run() {
-                final String url = IntentString.getUrlFromIntent(getIntent(),"about:blank");
+                final String urlString = IntentString.getUrlFromIntent(getIntent(), BLANK_URL);
 
                 final boolean isFastWifi = CheckConnectivity.getWifiSpeed() >= 300;
 
@@ -100,15 +76,14 @@ public class ViewerActivity extends AppCompatActivity {
                         webView.getSettings().setAppCacheEnabled(true);
                         webView.getSettings().setCacheMode(
                                 isFastWifi
-                                        ?WebSettings.LOAD_NO_CACHE
-                                        :WebSettings.LOAD_CACHE_ELSE_NETWORK);
-                        webView.getSettings().setJavaScriptEnabled(true);
-                        //webView.getSettings().setUserAgentString("");
+                                        ? WebSettings.LOAD_NO_CACHE
+                                        : WebSettings.LOAD_CACHE_ELSE_NETWORK);
+                        webView.getSettings().setJavaScriptEnabled(pref_webview_js_enabled);
+                        if (!pref_webview_custom_useragent.equals(""))
+                            webView.getSettings().setUserAgentString(pref_webview_custom_useragent);
                         setContentView(webView);
 
-
-
-                        webView.loadUrl(url);
+                        loadUrl(urlString);
                     }
                 });
             }
@@ -149,7 +124,7 @@ public class ViewerActivity extends AppCompatActivity {
                             try {
                                 final String updateText = webView.getTitle() + " " + webView.getUrl();
                                 final Bundle args = new Bundle();
-                                args.putString("updateText", updateText);
+                                args.putString(KEY_UPDATE_TEXT, updateText);
                                 final DialogFragment_UpdateStatus dialogFragment_UpdateStatus = new DialogFragment_UpdateStatus();
                                 dialogFragment_UpdateStatus.setArguments(args);
                                 dialogFragment_UpdateStatus.show(getSupportFragmentManager(), getString(R.string.action_update));
@@ -167,6 +142,31 @@ public class ViewerActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    private boolean checkUrl(String urlString) {
+        if (pref_webview_urlcheck_enabled) {
+            if (urlString.equals(BLANK_URL)) {
+                return true;
+            }
+            try {
+                final URL url = new URL(urlString);
+                final String protocol = url.getProtocol();
+                if (protocol.equals("http") || protocol.equals("https")) {
+                    return true;
+                }
+            } catch (MalformedURLException e) {
+            }
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private void loadUrl(String urlString) {
+        if (checkUrl(urlString)) {
+            webView.loadUrl(urlString);
+        }
+    }
+
     private boolean setSearchWord(final String searchWord) {
         new Thread(new Runnable() {
             @Override
@@ -180,10 +180,10 @@ public class ViewerActivity extends AppCompatActivity {
                             actionBar.setDisplayShowTitleEnabled(true);
                             if (searchWord != null && !searchWord.equals("")) {
                                 searchViewString = searchWord;
-                                if ((searchViewString.startsWith("http://")) || (searchViewString.startsWith("https://")) || (searchViewString.startsWith("about:"))) {
-                                    webView.loadUrl(searchViewString);
+                                if ((searchViewString.startsWith("http")) || (searchViewString.startsWith("about:"))) {
+                                    loadUrl(searchViewString);
                                 } else {
-                                    webView.loadUrl(GOOGLE_SEARCH_URL + URLEncoder.encode(searchViewString, "UTF-8"));
+                                    loadUrl(GOOGLE_SEARCH_URL + URLEncoder.encode(searchViewString, "UTF-8"));
                                 }
                             }
                             searchView.clearFocus();
@@ -196,5 +196,37 @@ public class ViewerActivity extends AppCompatActivity {
         }).start();
 
         return false;
+    }
+
+    public static class DialogFragment_UpdateStatus extends DialogFragment {
+        private EditText editText;
+        private TlAdapter adapter;
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            final Bundle bundle = getArguments();
+            final String updateText = bundle.getString(KEY_UPDATE_TEXT);
+
+            editText = new EditText(getActivity());
+            editText.setHint(R.string.action_update_text);
+            editText.setText(updateText);
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setTitle(R.string.action_update);
+            builder.setView(editText);
+            builder.setPositiveButton(R.string.action_update,
+                    new DialogInterface.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if ((editText != null) && (!editText.getText().toString().equals(""))) {
+                                adapter = new TlAdapter(getActivity(), null);
+                                TwitterAccess twitterAccess = new TwitterAccess(adapter);
+                                twitterAccess.updateStatus(KeyManage.getCurrentUser().screenName, editText.getText().toString());
+                            }
+                        }
+                    });
+            return builder.create();
+        }
     }
 }

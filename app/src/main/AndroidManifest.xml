@@ -76,6 +76,7 @@
             </intent-filter>
         </activity>
         <activity
+            android:exported="false"
             android:name=".Setting.PreferenceActivity"
             android:label="@string/title_activity_settings" />
         <activity

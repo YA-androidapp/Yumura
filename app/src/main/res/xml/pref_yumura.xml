@@ -1,27 +1,47 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"><!-- Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0 -->
 
-    <EditTextPreference
-        android:defaultValue="@string/pref_tl_api_count_value"
-        android:inputType="number"
-        android:key="pref_tl_api_count"
-        android:maxLines="1"
-        android:selectAllOnFocus="true"
-        android:singleLine="true"
-        android:title="@string/pref_tl_api_count" />
+    <PreferenceCategory android:title="@string/title_activity_tlactivity">
+        <EditTextPreference
+            android:defaultValue="@string/pref_tl_api_count_value"
+            android:inputType="number"
+            android:key="pref_tl_api_count"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/pref_tl_api_count" />
 
-    <SwitchPreference
-        android:defaultValue="false"
-        android:key="pref_tl_reverse_direction"
-        android:summary="@string/pref_tl_reverse_direction_message"
-        android:title="@string/pref_tl_reverse_direction" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="pref_tl_reverse_direction"
+            android:summary="@string/pref_tl_reverse_direction_message"
+            android:title="@string/pref_tl_reverse_direction" />
 
-    <ListPreference
-        android:defaultValue="-1"
-        android:entries="@array/pref_tl_theme_list_titles"
-        android:entryValues="@array/pref_tl_theme_list_values"
-        android:key="example_list"
-        android:negativeButtonText="@null"
-        android:positiveButtonText="@null"
-        android:title="@string/pref_tl_theme_list" />
+        <ListPreference
+            android:defaultValue="-1"
+            android:entries="@array/pref_tl_theme_list_titles"
+            android:entryValues="@array/pref_tl_theme_list_values"
+            android:key="example_list"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="@string/pref_tl_theme_list" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/title_activity_vieweractivity">
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="pref_webview_js_enabled"
+            android:title="@string/pref_webview_js_enabled" />
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="pref_webview_urlcheck_enabled"
+            android:title="@string/pref_webview_urlcheck_enabled" />
 
+        <EditTextPreference
+            android:defaultValue="@string/pref_webview_custom_useragent"
+            android:key="pref_webview_custom_useragent"
+            android:maxLines="1"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:text="@string/useragent_gecko"
+            android:title="@string/pref_webview_custom_useragent" />
+    </PreferenceCategory>
 </PreferenceScreen>

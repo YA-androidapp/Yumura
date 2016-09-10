@@ -70,72 +70,9 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
         return viewHolder;
     }
 
-    private static class SortedListCallback extends SortedList.Callback<Status> {
-
-        private RecyclerView.Adapter adapter;
-
-        public SortedListCallback(@NonNull RecyclerView.Adapter adapter) {
-            this.adapter = adapter;
-        }
-
-        @Override
-        public int compare(Status data1, Status data2) {
-            return -1 * Long.compare(data1.getId(), data2.getId());
-        }
-
-        @Override
-        public void onInserted(int position, int count) {
-            adapter.notifyItemRangeInserted(position, count);
-        }
-
-        @Override
-        public void onRemoved(int position, int count) {
-            adapter.notifyItemRangeRemoved(position, count);
-        }
-
-        @Override
-        public void onMoved(int fromPosition, int toPosition) {
-            adapter.notifyItemMoved(fromPosition, toPosition);
-        }
-
-        @Override
-        public void onChanged(int position, int count) {
-            adapter.notifyItemRangeChanged(position, count);
-        }
-
-        @Override
-        public boolean areContentsTheSame(Status oldData, Status newData) {
-            String oldText = oldData.getText();
-            if (oldText == null) {
-                return newData.getText() == null;
-            }
-            return oldText.equals(newData.getText());
-        }
-
-        @Override
-        public boolean areItemsTheSame(Status oldData, Status newData) {
-            return oldData.getId() == newData.getId();
-        }
-    }
-
-    static class ViewHolder extends RecyclerView.ViewHolder {
-        com.android.volley.toolbox.NetworkImageView statusIcon;
-        com.android.volley.toolbox.NetworkImageView statusIconRt;
-
-        TextView statusText;
-
-        public ViewHolder(View v) {
-            super(v);
-            statusIcon = (com.android.volley.toolbox.NetworkImageView) v.findViewById(R.id.statusIcon);
-            statusIconRt = (com.android.volley.toolbox.NetworkImageView) v.findViewById(R.id.statusIconRt);
-            statusText = (TextView) v.findViewById(R.id.statusText);
-        }
-
-    }
-
     public void addDataOf(List<Status> dataList) {
-
         mDataList.addAll(dataList);
+        notifyDataSetChanged();
 
         if (recyclerView != null) {
             if (pref_tl_reverse_direction) {
@@ -144,10 +81,34 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
                 try {
                     firstVisiblePosition = ((LinearLayoutManager) (recyclerView.getLayoutManager())).findFirstVisibleItemPosition();
                 } catch (Exception e) {
+                    Log.e("Yumura", e.getMessage());
                 }
                 try {
                     recyclerView.smoothScrollToPosition(firstVisiblePosition + dataList.size() - 1);
                 } catch (Exception e) {
+                    Log.e("Yumura", e.getMessage());
+                }
+            }
+        }
+    }
+
+    public void addDataOf(Status data) {
+        mDataList.add(data);
+        notifyDataSetChanged();
+
+        if (recyclerView != null) {
+            if (pref_tl_reverse_direction) {
+                // true: From bottom to top
+                int firstVisiblePosition = 0;
+                try {
+                    firstVisiblePosition = ((LinearLayoutManager) (recyclerView.getLayoutManager())).findFirstVisibleItemPosition();
+                } catch (Exception e) {
+                    Log.e("Yumura", e.getMessage());
+                }
+                try {
+                    recyclerView.smoothScrollToPosition(firstVisiblePosition);
+                } catch (Exception e) {
+                    Log.e("Yumura", e.getMessage());
                 }
             }
         }
@@ -157,33 +118,43 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
         try {
             mDataList.clear();
         } catch (Exception e) {
+            Log.e("Yumura", e.getMessage());
         }
     }
 
     @Override
     public int getItemCount() {
-        return mDataList.size();
+        if (mDataList != null)
+            return mDataList.size();
+        return 0;
     }
 
     @Override
     public long getItemId(int position) {
-        try {
-            return mDataList.get(position).getId();
-        }catch (Exception e){
-            Log.v("Yumura",e.getMessage());
-            return -1;
+        if ((position < getItemCount()) && (position >= 0)) {
+            try {
+                return mDataList.get(position).getId();
+            } catch (Exception e) {
+                Log.e("Yumura", e.getMessage());
+            }
         }
+
+        return -1;
     }
 
     public SortedList<Status> getList() {
         return mDataList;
     }
 
+    public int indexOf(Status status) {
+        return mDataList.indexOf(status);
+    }
+
     public final void moveToUnread() {
         long lastReadTweet = -1;
         lastReadTweet = PreferenceManage.getLong(context, PreferenceManage.Last_Read_Tweet, 0);
         Log.v("Yumura", "lastReadTweet: " + Long.toString(lastReadTweet));
-        if (lastReadTweet > 0){
+        if (lastReadTweet > 0) {
 
             Log.v("Yumura", "id[0]: " + getItemId(0));
             Log.v("Yumura", "id[adapter.getItemCount()-1]: " + getItemId(getItemCount() - 1));
@@ -232,15 +203,10 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     }
 
     public void scrollTo(final int pos) {
-//        int firstVisiblePosition = 0;
-//        try {
-//            firstVisiblePosition = ((LinearLayoutManager) (recyclerView.getLayoutManager())).findFirstVisibleItemPosition();
-//        } catch (Exception e) {
-//        }
         try {
             recyclerView.smoothScrollToPosition(pos - 1);
         } catch (Exception e) {
-            Log.v("Yumura",e.getMessage());
+            Log.e("Yumura", e.getMessage());
         }
     }
 
@@ -287,14 +253,84 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
         );
     }
 
-    private void saveLastReadTweet(final Status status, final int position){
+    private void saveLastReadTweet(final Status status, final int position) {
         Log.v("Yumura",
-                "saveLastReadTweet("+Long.toString(status.getId())+", "+Integer.toString(position)+")");
+                "saveLastReadTweet(" + Long.toString(status.getId()) + ", " + Integer.toString(position) + ")");
         long lastReadTweet = PreferenceManage.getLong(context, PreferenceManage.Last_Read_Tweet, 0);
         if (lastReadTweet < status.getId()) {
             PreferenceManage.putLong(context, PreferenceManage.Last_Read_Tweet, status.getId());
             scrollTo(position);
             Log.v("Yumura", "Last_Read_Tweet putLong " + Long.toString(status.getId()) + " " + position);
         }
+    }
+
+    private static class SortedListCallback extends SortedList.Callback<Status> {
+
+        private RecyclerView.Adapter adapter;
+
+        public SortedListCallback(@NonNull RecyclerView.Adapter adapter) {
+            this.adapter = adapter;
+        }
+
+        @Override
+        public int compare(Status status1, Status status2) {
+            if ((status1.getCreatedAt()).equals(status2.getCreatedAt())) {
+                return 0;
+            } else if ((status1.getCreatedAt()).compareTo(status2.getCreatedAt()) > 0) {
+                return -1;
+            } else {
+                return 1;
+            }
+        }
+
+        @Override
+        public void onInserted(int position, int count) {
+            adapter.notifyItemRangeInserted(position, count);
+        }
+
+        @Override
+        public void onRemoved(int position, int count) {
+            adapter.notifyItemRangeRemoved(position, count);
+        }
+
+        @Override
+        public void onMoved(int fromPosition, int toPosition) {
+            adapter.notifyItemMoved(fromPosition, toPosition);
+        }
+
+        @Override
+        public void onChanged(int position, int count) {
+            adapter.notifyItemRangeChanged(position, count);
+        }
+
+        @Override
+        public boolean areContentsTheSame(Status oldData, Status newData) {
+            String oldText = oldData.getText();
+            if (oldText == null) {
+                return newData.getText() == null;
+            }
+            return oldText.equals(newData.getText());
+        }
+
+        @Override
+        public boolean areItemsTheSame(Status oldData, Status newData) {
+            return oldData.getId() == newData.getId();
+        }
+
+    }
+
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        com.android.volley.toolbox.NetworkImageView statusIcon;
+        com.android.volley.toolbox.NetworkImageView statusIconRt;
+
+        TextView statusText;
+
+        public ViewHolder(View v) {
+            super(v);
+            statusIcon = (com.android.volley.toolbox.NetworkImageView) v.findViewById(R.id.statusIcon);
+            statusIconRt = (com.android.volley.toolbox.NetworkImageView) v.findViewById(R.id.statusIconRt);
+            statusText = (TextView) v.findViewById(R.id.statusText);
+        }
+
     }
 }

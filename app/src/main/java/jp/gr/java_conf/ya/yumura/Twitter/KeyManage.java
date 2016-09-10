@@ -145,33 +145,33 @@ public class KeyManage {
 
         final ArrayList<String> ids = new ArrayList<>();
         final Map<String, ?> map = keyPreferences.getAll();
-        Log.v("Yumura","getAll");
+        Log.v("Yumura", "getAll");
 
         if ((map == null) || (map.isEmpty())) {
-            Log.v("Yumura","null");
+            Log.v("Yumura", "null");
             return null;
         } else {
-            Log.v("Yumura","!null");
+            Log.v("Yumura", "!null");
             // if(addAllAccount)
             //     ids.add("All Accounts");
 
             myCrypt = new MyCrypt();
-            Log.v("Yumura","myCrypt");
+            Log.v("Yumura", "myCrypt");
 
             for (final Map.Entry<String, ?> entry : map.entrySet()) {
                 final String key = entry.getKey();
-                Log.v("Yumura","key: "+key);
+                Log.v("Yumura", "key: " + key);
                 if (key.contains("screenName")) {
                     try {
                         final String valueEncrypted = (String) entry.getValue();
-                        Log.v("Yumura","valueEncrypted: "+valueEncrypted);
+                        Log.v("Yumura", "valueEncrypted: " + valueEncrypted);
                         final String valueDecrypted = myCrypt.decrypt(valueEncrypted);
-                        Log.v("Yumura","valueDecrypted: "+valueDecrypted);
-                        final String value = prefix+valueDecrypted+suffix;
-                        Log.v("Yumura","value: "+value);
+                        Log.v("Yumura", "valueDecrypted: " + valueDecrypted);
+                        final String value = prefix + valueDecrypted + suffix;
+                        Log.v("Yumura", "value: " + value);
                         ids.add(value);
                     } catch (Exception e) {
-                        Log.v("Yumura","e: "+e.getMessage());
+                        Log.v("Yumura", "e: " + e.getMessage());
                     }
                 }
             }
@@ -214,7 +214,7 @@ public class KeyManage {
             return -1;
         } else {
             for (final long id : ids) {
-                if(getUser(id).screenName.toLowerCase(Locale.US).equals(screenName.toLowerCase(Locale.US))){
+                if (getUser(id).screenName.toLowerCase(Locale.US).equals(screenName.toLowerCase(Locale.US))) {
                     return id;
                 }
             }
@@ -234,6 +234,16 @@ public class KeyManage {
             }
             return users.toArray(new OAuthUser[0]);
         }
+    }
+
+    public static boolean isAuthenticatedUser(String screenName) {
+        String[] authenticatedScreennames = getScreenNames("", "");
+        for (String authenticatedScreenname : authenticatedScreennames) {
+            if ((authenticatedScreenname.equals(screenName)) && (authenticatedScreenname.equals("")))
+                return true;
+        }
+
+        return false;
     }
 
     public static void removeUser(final long userId) {

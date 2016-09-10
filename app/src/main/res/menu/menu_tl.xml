@@ -10,6 +10,12 @@
         app:showAsAction="always"
         />
     <item
+        android:id="@+id/action_enter_url"
+        android:orderInCategory="100"
+        android:title="@string/action_enter_url"
+        android:icon="@android:drawable/ic_input_add"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_move_to_unread"
         android:orderInCategory="100"
         android:title="@string/action_move_to_unread"
