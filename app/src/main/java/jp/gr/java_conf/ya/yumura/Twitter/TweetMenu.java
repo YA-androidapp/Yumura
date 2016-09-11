@@ -1,6 +1,5 @@
 package jp.gr.java_conf.ya.yumura.Twitter; // Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -8,7 +7,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +19,7 @@ import twitter4j.StatusUpdate;
 import twitter4j.URLEntity;
 
 public class TweetMenu {
+    private static boolean pref_debug_write_logcat = false;
     private static Context context;
 
     public static void showTweetMenu(final Context c, Status status) {
@@ -30,9 +29,13 @@ public class TweetMenu {
             return;
 
         if (Time.differenceMinutes(status.getCreatedAt()) > 2) {
-            final Status tempStatus = TwitterAccess.showStatus(status.getId());
-            if (tempStatus != null)
-                status = tempStatus;
+            try {
+                final Status tempStatus = TwitterAccess.showStatus(status.getId());
+                if (tempStatus != null)
+                    status = tempStatus;
+            } catch (Exception e) {
+                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            }
         }
 
         final Status statusMe = status;
@@ -107,6 +110,7 @@ public class TweetMenu {
             intent.setData(Uri.parse(TwitterAccess.URL_PROTOCOL + TwitterAccess.URL_TWITTER + "/" + screenName));
             context.startActivity(intent);
         } catch (Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
     }
 
@@ -130,6 +134,7 @@ public class TweetMenu {
                                 statusUpdate.inReplyToStatusId(status.getId());
                                 twitterAccess.updateStatus(menuItemArray[which].replace("@", ""), statusUpdate);
                             } catch (Exception e) {
+                                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                             }
                         }
                     }
@@ -150,8 +155,9 @@ public class TweetMenu {
                             public final void run() {
                                 try {
                                     TwitterAccess twitterAccess = new TwitterAccess(null);
-                                    twitterAccess.retweet(menuItemArray[which],status);
+                                    twitterAccess.retweet(menuItemArray[which], status);
                                 } catch (Exception e) {
+                                    if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                                 }
                             }
                         }).start();
@@ -173,8 +179,9 @@ public class TweetMenu {
                             public final void run() {
                                 try {
                                     TwitterAccess twitterAccess = new TwitterAccess(null);
-                                    twitterAccess.userRetweet(menuItemArray[which],status);
+                                    twitterAccess.userRetweet(menuItemArray[which], status);
                                 } catch (Exception e) {
+                                    if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                                 }
                             }
                         }).start();
@@ -196,8 +203,9 @@ public class TweetMenu {
                             public final void run() {
                                 try {
                                     TwitterAccess twitterAccess = new TwitterAccess(null);
-                                    twitterAccess.createFavorite(menuItemArray[which],status);
+                                    twitterAccess.createFavorite(menuItemArray[which], status);
                                 } catch (Exception e) {
+                                    if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                                 }
                             }
                         }).start();
@@ -222,8 +230,10 @@ public class TweetMenu {
                                     public final void run() {
                                         try {
                                             TwitterAccess twitterAccess = new TwitterAccess(null);
-                                            twitterAccess.destroyFavorite(menuItemArray[which],status);
+                                            twitterAccess.destroyFavorite(menuItemArray[which], status);
                                         } catch (Exception e) {
+                                            if (pref_debug_write_logcat)
+                                                Log.e("Yumura", e.getMessage());
                                         }
                                     }
                                 }).start();
@@ -249,6 +259,7 @@ public class TweetMenu {
             intent.setData(Uri.parse(urlString));
             context.startActivity(intent);
         } catch (Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
     }
 
@@ -258,6 +269,7 @@ public class TweetMenu {
             intent.setData(Uri.parse(ViewString.getParmaLink(status)));
             context.startActivity(intent);
         } catch (Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
     }
 
@@ -269,6 +281,7 @@ public class TweetMenu {
             intent.putExtra(Intent.EXTRA_TEXT, status.getText());
             context.startActivity(intent);
         } catch (Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
     }
 
@@ -286,9 +299,9 @@ public class TweetMenu {
                             public final void run() {
                                 try {
                                     TwitterAccess twitterAccess = new TwitterAccess(null);
-                                    twitterAccess.destroyStatus(menuItemArray[which],status);
+                                    twitterAccess.destroyStatus(menuItemArray[which], status);
                                 } catch (Exception e) {
-                                    Log.v("Yumura", e.getMessage());
+                                    if (pref_debug_write_logcat) Log.v("Yumura", e.getMessage());
                                 }
                             }
                         }).start();
@@ -310,8 +323,9 @@ public class TweetMenu {
                             public final void run() {
                                 try {
                                     TwitterAccess twitterAccess = new TwitterAccess(null);
-                                    twitterAccess.pak(menuItemArray[which].replace("@",""),status);
+                                    twitterAccess.pak(menuItemArray[which].replace("@", ""), status);
                                 } catch (Exception e) {
+                                    if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                                 }
                             }
                         }).start();

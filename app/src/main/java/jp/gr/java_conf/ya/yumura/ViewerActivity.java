@@ -10,6 +10,7 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.webkit.WebSettings;
@@ -38,6 +39,7 @@ public class ViewerActivity extends AppCompatActivity {
     private String searchViewString = "";
     private String pref_webview_custom_useragent = "";
     private WebView webView;
+    private boolean pref_debug_write_logcat = true;
     private boolean pref_webview_js_enabled = false;
     private boolean pref_webview_urlcheck_enabled = true;
     private SearchView.OnQueryTextListener onQueryTextListener = new SearchView.OnQueryTextListener() {
@@ -55,7 +57,7 @@ public class ViewerActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        pref_debug_write_logcat = PreferenceManage.getBoolean(this, "pref_debug_write_logcat", false);
         pref_webview_js_enabled = PreferenceManage.getBoolean(this, "pref_webview_js_enabled", false);
         pref_webview_urlcheck_enabled = PreferenceManage.getBoolean(this, "pref_webview_urlcheck_enabled", false);
         pref_webview_custom_useragent = PreferenceManage.getString(this, "pref_webview_custom_useragent", "");
@@ -129,6 +131,7 @@ public class ViewerActivity extends AppCompatActivity {
                                 dialogFragment_UpdateStatus.setArguments(args);
                                 dialogFragment_UpdateStatus.show(getSupportFragmentManager(), getString(R.string.action_update));
                             } catch (Exception e) {
+                                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                             }
                         }
                     });
@@ -154,6 +157,7 @@ public class ViewerActivity extends AppCompatActivity {
                     return true;
                 }
             } catch (MalformedURLException e) {
+                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
             }
             return false;
         } else {
@@ -189,6 +193,7 @@ public class ViewerActivity extends AppCompatActivity {
                             searchView.clearFocus();
                             actionBar.collapseActionView();
                         } catch (Exception e) {
+                            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                         }
                     }
                 });

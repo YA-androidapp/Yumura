@@ -1,5 +1,7 @@
 package jp.gr.java_conf.ya.yumura.String; // Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
 
+import android.util.Log;
+
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.Map;
@@ -12,10 +14,10 @@ import twitter4j.Status;
 import twitter4j.URLEntity;
 
 public class ViewString {
-
     public static final SimpleDateFormat sdf_yyyyMMddHHmmssOnlyNumber = new SimpleDateFormat("yyyyMMddHHmmss", Locale.JAPAN);
     public static final SimpleDateFormat sdf_yyyyMMddHHmmssSSSOnlyNumber = new SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.JAPAN);
     public static final SimpleDateFormat sdf_yyyyMMddHHmmssSSS = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS", Locale.JAPAN);
+    private static boolean pref_debug_write_logcat = false;
 
     public static String getTweetFooter(final Status status) {
         final StringBuilder sb = new StringBuilder();
@@ -30,6 +32,7 @@ public class ViewString {
 
             return sb.toString();
         } catch (Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
             return "";
         }
     }
@@ -47,6 +50,7 @@ public class ViewString {
 
             return sb.toString();
         } catch (Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
             return "";
         }
     }
@@ -79,6 +83,7 @@ public class ViewString {
 
             return sb.toString();
         } catch (Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
             return "";
         }
     }

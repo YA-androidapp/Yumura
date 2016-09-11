@@ -5,14 +5,19 @@ import java.util.Map;
 
 // http://qiita.com/yoshi389111/items/230ce4f6f3d9ee5f6867
 public class LruCacheMap<K, V> extends LinkedHashMap<K, V> {
-    /** シリアライズバージョン */
+    /**
+     * シリアライズバージョン
+     */
     private static final long serialVersionUID = 1L;
 
-    /** キャッシュエントリ最大数 */
+    /**
+     * キャッシュエントリ最大数
+     */
     private final int maxSize;
 
     /**
      * 指定された最大数でインスタンスを生成
+     *
      * @param maxSize 最大数
      */
     public LruCacheMap(int maxSize) {
@@ -20,7 +25,9 @@ public class LruCacheMap<K, V> extends LinkedHashMap<K, V> {
         this.maxSize = maxSize;
     }
 
-    /** エントリの削除要否を判断 */
+    /**
+     * エントリの削除要否を判断
+     */
     @Override
     protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
         return size() > maxSize;

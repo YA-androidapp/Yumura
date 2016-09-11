@@ -4,11 +4,13 @@
     <string name="app_name_viewer">Yumura viewer</string>
     <string name="action_cancel">キャンセル</string>
     <string name="action_change_consumer_key">コンシューマーキーの変更</string>
+    <string name="action_debug">デバッグ</string>
     <string name="action_delJustBefore">直前のツイートを削除</string>
     <string name="action_delJustBefore_del">削除</string>
     <string name="action_enter_url">URL入力（自動補完）</string>
     <string name="action_makeShortcut">ショートカットを作成</string>
     <string name="action_move_to_unread">未読へ移動</string>
+    <string name="action_ok">OK</string>
     <string name="action_settings">Settings</string>
     <string name="action_update">投稿</string>
     <string name="action_update_text">本文</string>
@@ -50,6 +52,9 @@
     <string name="pref_webview_urlcheck_enabled_message">HTTP／HTTPSプロトコルのみ許可します</string>
     <string name="pref_webview_custom_useragent">User Agent</string>
     <string name="useragent_gecko">Mozilla/5.0 (Android; Mobile; rv:48.0) Gecko/48.0 Firefox/48.0</string>
+
+
+    <string name="pref_debug_write_logcat">デバッグログを出力する</string>
 
     <string name="pref_tl_theme_list">Theme</string>
     <string-array name="pref_tl_theme_list_titles">

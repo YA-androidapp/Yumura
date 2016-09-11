@@ -4,7 +4,7 @@ import org.junit.Test;
 
 import jp.gr.java_conf.ya.yumura.Twitter.TwitterAccess;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class UnitTest_TwitterAccess {
     @Test

@@ -5,15 +5,23 @@ import android.support.v4.util.LruCache;
 
 import com.android.volley.toolbox.ImageLoader;
 
-public class BitmapCache implements ImageLoader.ImageCache{
+public class BitmapCache implements ImageLoader.ImageCache {
     private LruCache<String, Bitmap> mMemoryCache;
+
+    private BitmapCache(int memCacheSize) {
+        init(memCacheSize);
+    }
 
     public static BitmapCache getInstance() {
         return new BitmapCache(getDefaultLruCacheSize());
     }
 
-    private BitmapCache(int memCacheSize) {
-        init(memCacheSize);
+    public static int getBitmapSize(Bitmap bitmap) {
+        return bitmap.getByteCount();
+    }
+
+    public static int getDefaultLruCacheSize() {
+        return (int) (Runtime.getRuntime().maxMemory() / 8192);
     }
 
     private void init(int memCacheSize) {
@@ -24,10 +32,6 @@ public class BitmapCache implements ImageLoader.ImageCache{
                 return bitmapSize == 0 ? 1 : bitmapSize;
             }
         };
-    }
-
-    public static int getBitmapSize(Bitmap bitmap) {
-        return bitmap.getByteCount();
     }
 
     @Override
@@ -64,9 +68,5 @@ public class BitmapCache implements ImageLoader.ImageCache{
     public void clearCache() {
         if (mMemoryCache != null)
             mMemoryCache.evictAll();
-    }
-
-    public static int getDefaultLruCacheSize() {
-        return (int)(Runtime.getRuntime().maxMemory() / 8192);
     }
 }

@@ -2,10 +2,12 @@ package jp.gr.java_conf.ya.yumura.Layout; // Copyright (c) 2013-2016 YA <ya.andr
 
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 
 public abstract class EndlessScrollListener extends RecyclerView.OnScrollListener {
 
     private boolean loading = true;
+    private boolean pref_debug_write_logcat = true;
 
     private int visibleThreshold = 5;
 
@@ -41,7 +43,8 @@ public abstract class EndlessScrollListener extends RecyclerView.OnScrollListene
 
             try {
                 onLoadMore(current_page);
-            }catch(Exception e){
+            } catch (Exception e) {
+                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
             }
 
             loading = true;

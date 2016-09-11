@@ -33,6 +33,7 @@ import jp.gr.java_conf.ya.yumura.Twitter.TweetMenu;
 import twitter4j.Status;
 
 public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
+    private boolean pref_debug_write_logcat = true;
     private boolean pref_tl_reverse_direction = false;
 
     private Context context;
@@ -81,12 +82,12 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
                 try {
                     firstVisiblePosition = ((LinearLayoutManager) (recyclerView.getLayoutManager())).findFirstVisibleItemPosition();
                 } catch (Exception e) {
-                    Log.e("Yumura", e.getMessage());
+                    if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                 }
                 try {
                     recyclerView.smoothScrollToPosition(firstVisiblePosition + dataList.size() - 1);
                 } catch (Exception e) {
-                    Log.e("Yumura", e.getMessage());
+                    if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                 }
             }
         }
@@ -103,12 +104,12 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
                 try {
                     firstVisiblePosition = ((LinearLayoutManager) (recyclerView.getLayoutManager())).findFirstVisibleItemPosition();
                 } catch (Exception e) {
-                    Log.e("Yumura", e.getMessage());
+                    if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                 }
                 try {
                     recyclerView.smoothScrollToPosition(firstVisiblePosition);
                 } catch (Exception e) {
-                    Log.e("Yumura", e.getMessage());
+                    if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                 }
             }
         }
@@ -118,8 +119,12 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
         try {
             mDataList.clear();
         } catch (Exception e) {
-            Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
+    }
+
+    public Context getContext() {
+        return context;
     }
 
     @Override
@@ -135,7 +140,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
             try {
                 return mDataList.get(position).getId();
             } catch (Exception e) {
-                Log.e("Yumura", e.getMessage());
+                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
             }
         }
 
@@ -153,16 +158,19 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     public final void moveToUnread() {
         long lastReadTweet = -1;
         lastReadTweet = PreferenceManage.getLong(context, PreferenceManage.Last_Read_Tweet, 0);
-        Log.v("Yumura", "lastReadTweet: " + Long.toString(lastReadTweet));
+        if (pref_debug_write_logcat)
+            Log.v("Yumura", "lastReadTweet: " + Long.toString(lastReadTweet));
         if (lastReadTweet > 0) {
 
-            Log.v("Yumura", "id[0]: " + getItemId(0));
-            Log.v("Yumura", "id[adapter.getItemCount()-1]: " + getItemId(getItemCount() - 1));
+            if (pref_debug_write_logcat) Log.v("Yumura", "id[0]: " + getItemId(0));
+            if (pref_debug_write_logcat)
+                Log.v("Yumura", "id[adapter.getItemCount()-1]: " + getItemId(getItemCount() - 1));
 
             if ((getItemId(0) >= lastReadTweet) && (getItemId(getItemCount() - 1) <= lastReadTweet)) {
                 int position = BinarySearchUtil.binary_search(lastReadTweet, getList());
                 scrollTo(position);
-                Log.v("Yumura", "Last_Read_Tweet getLong " + Long.toString(getItemId(position)) + " " + position);
+                if (pref_debug_write_logcat)
+                    Log.v("Yumura", "Last_Read_Tweet getLong " + Long.toString(getItemId(position)) + " " + position);
             } else {
                 scrollTo(getItemCount() - 1);
             }
@@ -206,7 +214,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
         try {
             recyclerView.smoothScrollToPosition(pos - 1);
         } catch (Exception e) {
-            Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
     }
 
@@ -217,6 +225,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     }
 
     private void getPreferences() {
+        pref_debug_write_logcat = PreferenceManage.getBoolean(context, "pref_debug_write_logcat", false);
         pref_tl_reverse_direction = PreferenceManage.getBoolean(context, "pref_tl_textsize_default", pref_tl_reverse_direction);
         pref_tl_iconsize_default = (int) (context.getResources().getDisplayMetrics().density *
                 PreferenceManage.getInt(context, "pref_tl_iconsize_default",
@@ -254,13 +263,14 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     }
 
     private void saveLastReadTweet(final Status status, final int position) {
-        Log.v("Yumura",
+        if (pref_debug_write_logcat) Log.v("Yumura",
                 "saveLastReadTweet(" + Long.toString(status.getId()) + ", " + Integer.toString(position) + ")");
         long lastReadTweet = PreferenceManage.getLong(context, PreferenceManage.Last_Read_Tweet, 0);
         if (lastReadTweet < status.getId()) {
             PreferenceManage.putLong(context, PreferenceManage.Last_Read_Tweet, status.getId());
             scrollTo(position);
-            Log.v("Yumura", "Last_Read_Tweet putLong " + Long.toString(status.getId()) + " " + position);
+            if (pref_debug_write_logcat)
+                Log.v("Yumura", "Last_Read_Tweet putLong " + Long.toString(status.getId()) + " " + position);
         }
     }
 

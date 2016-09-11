@@ -9,11 +9,7 @@ public class OAuthUser {
     public String tokenSecret;
     public long userId;
 
-    public String toLogString(){
-        return alias + " , "+consumerKey+ " , "+consumerSecret+ " , "+screenName+ " , "+token+ " , "+tokenSecret+ " , "+Long.toString(userId);
-    }
-
-    public OAuthUser(final String alias,final String consumerKey, final String consumerSecret, final String screenName, final String token, final String tokenSecret, final long userId) {
+    public OAuthUser(final String alias, final String consumerKey, final String consumerSecret, final String screenName, final String token, final String tokenSecret, final long userId) {
         this.alias = alias;
         this.consumerKey = consumerKey;
         this.consumerSecret = consumerSecret;
@@ -21,5 +17,9 @@ public class OAuthUser {
         this.token = token;
         this.tokenSecret = tokenSecret;
         this.userId = userId;
+    }
+
+    public String toLogString() {
+        return alias + " , " + consumerKey + " , " + consumerSecret + " , " + screenName + " , " + token + " , " + tokenSecret + " , " + Long.toString(userId);
     }
 }

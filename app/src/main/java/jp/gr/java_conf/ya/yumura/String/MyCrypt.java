@@ -1,10 +1,8 @@
 package jp.gr.java_conf.ya.yumura.String; // Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.telephony.TelephonyManager;
 import android.util.Base64;
 import android.util.Log;
 
@@ -15,13 +13,15 @@ import jp.gr.java_conf.ya.yumura.App;
 import jp.gr.java_conf.ya.yumura.R;
 
 public final class MyCrypt {
-    // TODO private
+    private static boolean pref_debug_write_logcat = false;
+
     public static final String getCrpKey() {
         String crpKey = App.getResString(R.string.app_name);
         try {
             final PackageInfo packageInfo = App.getContext().getPackageManager().getPackageInfo("jp.gr.java_conf.ya.yumura", PackageManager.GET_META_DATA);
             crpKey += Long.toString(packageInfo.firstInstallTime);
         } catch (PackageManager.NameNotFoundException e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
         return crpKey;
     }
@@ -34,6 +34,7 @@ public final class MyCrypt {
             cipher.init(Cipher.DECRYPT_MODE, sksSpec);
             return new String(cipher.doFinal(decrypted));
         } catch (final Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
         return "";
     }
@@ -48,6 +49,7 @@ public final class MyCrypt {
             final String encrypted_str = Base64.encodeToString(encrypted, Base64.DEFAULT);
             return encrypted_str;
         } catch (final Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
         return "";
     }

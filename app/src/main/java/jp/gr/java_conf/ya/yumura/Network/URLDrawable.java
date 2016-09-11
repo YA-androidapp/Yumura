@@ -9,7 +9,7 @@ public class URLDrawable extends BitmapDrawable {
 
     @Override
     public void draw(Canvas canvas) {
-        if(drawable != null) {
+        if (drawable != null) {
             drawable.draw(canvas);
         }
     }

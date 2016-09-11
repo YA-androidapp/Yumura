@@ -7,36 +7,35 @@
         android:orderInCategory="100"
         android:title="@string/search_menu_search"
         app:actionViewClass="android.support.v7.widget.SearchView"
-        app:showAsAction="always"
-        />
+        app:showAsAction="always" />
     <item
         android:id="@+id/action_enter_url"
+        android:icon="@android:drawable/ic_input_add"
         android:orderInCategory="100"
         android:title="@string/action_enter_url"
-        android:icon="@android:drawable/ic_input_add"
         app:showAsAction="never" />
     <item
         android:id="@+id/action_move_to_unread"
+        android:icon="@android:drawable/ic_menu_view"
         android:orderInCategory="100"
         android:title="@string/action_move_to_unread"
-        android:icon="@android:drawable/ic_menu_view"
         app:showAsAction="always" />
     <item
         android:id="@+id/action_delJustBefore"
+        android:icon="@android:drawable/ic_menu_delete"
         android:orderInCategory="100"
         android:title="@string/action_delJustBefore"
-        android:icon="@android:drawable/ic_menu_delete"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_makeShortcut"
+        android:icon="@android:drawable/ic_menu_add"
         android:orderInCategory="100"
         android:title="@string/action_makeShortcut"
-        android:icon="@android:drawable/ic_menu_add"
         app:showAsAction="never" />
     <item
         android:id="@+id/action_settings"
+        android:icon="@android:drawable/ic_menu_preferences"
         android:orderInCategory="100"
         android:title="@string/action_settings"
-        android:icon="@android:drawable/ic_menu_preferences"
         app:showAsAction="never" />
 </menu>

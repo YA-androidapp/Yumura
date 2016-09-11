@@ -6,7 +6,6 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 
 import jp.gr.java_conf.ya.yumura.App;
 

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.text.Html;
+import android.util.Log;
 import android.view.View;
 
 import java.io.IOException;
@@ -19,24 +20,26 @@ public class ImgGetter implements Html.ImageGetter {
     View container;
     Context context;
 
+    private boolean pref_debug_write_logcat = true;
     private float pref_tl_img_zoom = 3.0f;
 
     public ImgGetter(final View t, final Context c) {
         this.container = t;
         this.context = c;
 
-        pref_tl_img_zoom = PreferenceManage.getFloat(c,"pref_tl_img_zoom", 3.0f);
+        pref_tl_img_zoom = PreferenceManage.getFloat(c, "pref_tl_img_zoom", 3.0f);
     }
 
     public Drawable getDrawable(final String source) {
-        if (( source.equals("favorite") ) || ( source.equals("favorite_hover") ) || ( source.equals("favorite_on") ) || ( source.equals("reply") ) || ( source.equals("reply_hover") )
-                || ( source.equals("retweet") ) || ( source.equals("retweet_hover") ) || ( source.equals("retweet_on") )) {
+        if ((source.equals("favorite")) || (source.equals("favorite_hover")) || (source.equals("favorite_on")) || (source.equals("reply")) || (source.equals("reply_hover"))
+                || (source.equals("retweet")) || (source.equals("retweet_hover")) || (source.equals("retweet_on"))) {
             try {
                 final int id = context.getResources().getIdentifier(source, "drawable", context.getPackageName());
                 final Drawable drawable = context.getResources().getDrawable(id);
                 drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
                 return drawable;
             } catch (final Exception e) {
+                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
             }
             return context.getResources().getDrawable(android.R.drawable.ic_delete);
         } else {
@@ -64,7 +67,7 @@ public class ImgGetter implements Html.ImageGetter {
         @Override
         protected void onPostExecute(Drawable result) {
             // set the correct bound according to the result from HTTP call
-            urlDrawable.setBounds(0, 0, (int)(pref_tl_img_zoom * result.getIntrinsicWidth()), (int)(pref_tl_img_zoom * result.getIntrinsicHeight()));
+            urlDrawable.setBounds(0, 0, (int) (pref_tl_img_zoom * result.getIntrinsicWidth()), (int) (pref_tl_img_zoom * result.getIntrinsicHeight()));
 
             // change the reference of the current drawable to the result
             // from the HTTP call
@@ -78,9 +81,10 @@ public class ImgGetter implements Html.ImageGetter {
             try {
                 final InputStream is = fetch(urlString);
                 final Drawable drawable = Drawable.createFromStream(is, "src");
-                drawable.setBounds(0, 0, (int)(pref_tl_img_zoom * drawable.getIntrinsicWidth()), (int)(pref_tl_img_zoom * drawable.getIntrinsicHeight()));
+                drawable.setBounds(0, 0, (int) (pref_tl_img_zoom * drawable.getIntrinsicWidth()), (int) (pref_tl_img_zoom * drawable.getIntrinsicHeight()));
                 return drawable;
             } catch (Exception e) {
+                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                 return null;
             }
         }
