@@ -24,6 +24,15 @@
             android:negativeButtonText="@string/action_cancel"
             android:positiveButtonText="@string/action_ok"
             android:title="@string/pref_tl_theme_list" />
+        <PreferenceScreen android:title="@string/title_tl_mute">
+            <PreferenceCategory android:title="@string/title_tl_mute">
+                <EditTextPreference
+                    android:key="pref_tl_mute_text"
+                    android:selectAllOnFocus="false"
+                    android:summary="@string/pref_tl_mute_text_summary"
+                    android:title="@string/pref_tl_mute_text" />
+            </PreferenceCategory>
+        </PreferenceScreen>
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/title_activity_vieweractivity">
         <SwitchPreference

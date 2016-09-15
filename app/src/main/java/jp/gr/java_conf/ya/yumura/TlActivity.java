@@ -26,6 +26,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -36,7 +37,9 @@ import jp.gr.java_conf.ya.yumura.Network.CheckConnectivity;
 import jp.gr.java_conf.ya.yumura.Setting.PreferenceActivity;
 import jp.gr.java_conf.ya.yumura.Setting.PreferenceManage;
 import jp.gr.java_conf.ya.yumura.String.IntentString;
+import jp.gr.java_conf.ya.yumura.String.SearchStatus;
 import jp.gr.java_conf.ya.yumura.String.ViewString;
+import jp.gr.java_conf.ya.yumura.Time.Cal;
 import jp.gr.java_conf.ya.yumura.Time.Time;
 import jp.gr.java_conf.ya.yumura.Twitter.BinarySearchUtil;
 import jp.gr.java_conf.ya.yumura.Twitter.KeyManage;
@@ -159,6 +162,8 @@ public class TlActivity extends AppCompatActivity {
             Intent intent = new Intent(this, PreferenceActivity.class);
             startActivity(intent);
             return true;
+        } else if (id ==R.id.action_tl_search) {
+            (new DialogFragment_TlSearch()).show(getSupportFragmentManager(), getString(R.string.action_tl_search));
         }
 
         return super.onOptionsItemSelected(item);
@@ -324,7 +329,7 @@ public class TlActivity extends AppCompatActivity {
                 Log.v("Yumura", "id[adapter.getItemCount()-1]: " + adapter.getItemId(adapter.getItemCount() - 1));
 
             if ((adapter.getItemId(0) >= lastReadTweet) && (adapter.getItemId(adapter.getItemCount() - 1) <= lastReadTweet)) {
-                int position = BinarySearchUtil.binary_search(lastReadTweet, adapter.getList());
+                int position = BinarySearchUtil.binary_search_id(lastReadTweet, adapter.getList());
                 adapter.scrollTo(position);
                 if (pref_debug_write_logcat)
                     Log.v("Yumura", "Last_Read_Tweet getLong " + Long.toString(adapter.getItemId(position)) + " " + position);
@@ -606,6 +611,61 @@ public class TlActivity extends AppCompatActivity {
                                     twitterAccess.updateStatus(menuItemArray[which].replace("@", ""), statusUpdate);
                                 } catch (Exception e) {
                                     if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                                }
+                            }
+                        }
+                    });
+            return accountDlg.create();
+        }
+    }
+
+    public static class DialogFragment_TlSearch extends DialogFragment {
+        private EditText editText;
+        private TlAdapter adapter;
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            editText = new EditText(getActivity());
+            editText.setText("");
+            editText.setHint(R.string.action_tl_search);
+
+            final String[] menuItemArray = { // ミュート種別
+                    getString(R.string.action_tl_search_screenname),    // ユーザ名
+                    getString(R.string.action_tl_search_text),          // 本文
+                    getString(R.string.action_tl_search_createat),      // 日時
+                    getString(R.string.action_tl_search_source)         // クライアント名
+            };
+
+            final AlertDialog.Builder accountDlg = new AlertDialog.Builder(getActivity());
+            accountDlg.setTitle(getString(R.string.action_tl_search));
+            accountDlg.setView(editText);
+            accountDlg.setItems(
+                    menuItemArray,
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            if ((editText != null) && (!editText.getText().toString().equals(""))) {
+                                adapter = ((TlActivity) getActivity()).adapter;
+
+                                if (menuItemArray[which].equals(getString(R.string.action_tl_search_screenname))) {
+                                    final int position = SearchStatus.searchStatusPositionByTweetScreenname(editText.getText().toString(), // ユーザ名
+                                            adapter.getList(), ((LinearLayoutManager) adapter.getRecyclerView().getLayoutManager()).findFirstVisibleItemPosition());
+                                    adapter.scrollTo(position);
+                                } else if (menuItemArray[which].equals(getString(R.string.action_tl_search_text))) {
+                                    final int position = SearchStatus.searchStatusPositionByTweetText(editText.getText().toString(), // 本文
+                                            adapter.getList(), ((LinearLayoutManager) adapter.getRecyclerView().getLayoutManager()).findFirstVisibleItemPosition());
+                                    adapter.scrollTo(position);
+                                } else if (menuItemArray[which].equals(getString(R.string.action_tl_search_createat))) {
+                                    final Calendar cal = Cal.toCalendar(editText.getText().toString());
+                                    if(cal!=null) {
+                                        final int position = BinarySearchUtil.binary_search_time(cal.getTime().getTime(), // 投稿日時
+                                                adapter.getList(), ((LinearLayoutManager) adapter.getRecyclerView().getLayoutManager()).findFirstVisibleItemPosition());
+
+                                        adapter.scrollTo(position);
+                                    }
+                                } else if (menuItemArray[which].equals(getString(R.string.action_tl_search_source))) {
+                                    final int position = SearchStatus.searchStatusPositionByTweetSource(editText.getText().toString(), // クライアント名
+                                            adapter.getList(), ((LinearLayoutManager) adapter.getRecyclerView().getLayoutManager()).findFirstVisibleItemPosition());
+                                    adapter.scrollTo(position);
                                 }
                             }
                         }

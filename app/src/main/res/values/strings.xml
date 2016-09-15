@@ -11,7 +11,13 @@
     <string name="action_makeShortcut">ショートカットを作成</string>
     <string name="action_move_to_unread">未読へ移動</string>
     <string name="action_ok">OK</string>
+    <string name="action_search">検索</string>
     <string name="action_settings">Settings</string>
+    <string name="action_tl_search">ページ内検索</string>
+    <string name="action_tl_search_createat">投稿日時</string>
+    <string name="action_tl_search_screenname">ユーザ名</string>
+    <string name="action_tl_search_source">クライアント名</string>
+    <string name="action_tl_search_text">本文</string>
     <string name="action_update">投稿</string>
     <string name="action_update_text">本文</string>
     <string name="message_change_consumer_key">dev.twitter.comで取得したConsumer keyとConsumer secretをスペース区切りで入力してください</string>
@@ -21,6 +27,7 @@
     <string name="title_activity_oauth">OAuth Sign-in</string>
     <string name="title_activity_tlactivity">タイムライン</string>
     <string name="title_activity_vieweractivity">ビューワ</string>
+    <string name="title_tl_mute">ミュート</string>
 
     <!-- TweetMenu -->
     <string name="tweet_reply">返信</string>
@@ -43,6 +50,10 @@
     <!-- Preferences -->
     <string name="pref_tl_api_count">The number of tweets to try and retrieve</string>
     <string name="pref_tl_api_count_value">200</string>
+
+    <string name="pref_tl_mute">ミュート</string>
+    <string name="pref_tl_mute_text">ミュート（本文）</string>
+    <string name="pref_tl_mute_text_summary">カンマ区切り</string>
 
     <string name="pref_tl_reverse_direction">Read Direction</string>
     <string name="pref_tl_reverse_direction_message">Reverse the read direction of timelines (true: From bottom to top)</string>

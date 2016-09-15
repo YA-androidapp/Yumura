@@ -50,6 +50,10 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
 
     private SortedList<Status> mDataList;
 
+    private String pref_tl_mute_text;
+
+    private String[] muteTextArray;
+
     public TlAdapter(final Context context, final RecyclerView recyclerView) {
         super();
 
@@ -151,6 +155,10 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
         return mDataList;
     }
 
+    public RecyclerView getRecyclerView() {
+        return recyclerView;
+    }
+
     public int indexOf(Status status) {
         return mDataList.indexOf(status);
     }
@@ -167,7 +175,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
                 Log.v("Yumura", "id[adapter.getItemCount()-1]: " + getItemId(getItemCount() - 1));
 
             if ((getItemId(0) >= lastReadTweet) && (getItemId(getItemCount() - 1) <= lastReadTweet)) {
-                int position = BinarySearchUtil.binary_search(lastReadTweet, getList());
+                int position = BinarySearchUtil.binary_search_id(lastReadTweet, getList());
                 scrollTo(position);
                 if (pref_debug_write_logcat)
                     Log.v("Yumura", "Last_Read_Tweet getLong " + Long.toString(getItemId(position)) + " " + position);
@@ -182,24 +190,56 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     public void onBindViewHolder(ViewHolder holder, final int position) {
         final Status status = mDataList.get(position);
 
-        final MovementMethod movementmethod = LinkMovementMethod.getInstance();
-        holder.statusText.setMovementMethod(movementmethod);
-        final ImgGetter imgGetter = new ImgGetter(holder.statusText, context);
-        if (Build.VERSION.SDK_INT >= 24) {
-            holder.statusText.setText(Html.fromHtml(ViewString.getStatusText(status), Html.FROM_HTML_MODE_LEGACY, imgGetter, null));
-        } else {
-            holder.statusText.setText(Html.fromHtml(ViewString.getStatusText(status), imgGetter, null));
-        }
-        holder.statusText.setTextSize(pref_tl_textsize_default);
-        holder.statusText.setOnClickListener(
-                new View.OnClickListener() {
-                    public void onClick(View v) {
-                        saveLastReadTweet(status, position);
-                    }
-                }
-        );
+        if (checkMute(status)) {
+            holder.itemView.setVisibility(View.GONE);
 
-        onBindViewHolderIcon(holder, status);
+            holder.statusText.setVisibility(View.GONE);
+            holder.statusText.setText("");
+
+            holder.statusIcon.setVisibility(View.GONE);
+            holder.statusIcon.setImageResource(android.R.color.transparent);
+
+            holder.statusIconRt.setVisibility(View.GONE);
+            holder.statusIconRt.setImageResource(android.R.color.transparent);
+        } else {
+            holder.itemView.setVisibility(View.VISIBLE);
+
+            holder.statusText.setVisibility(View.VISIBLE);
+
+            final MovementMethod movementmethod = LinkMovementMethod.getInstance();
+            holder.statusText.setMovementMethod(movementmethod);
+            final ImgGetter imgGetter = new ImgGetter(holder.statusText, context);
+            if (Build.VERSION.SDK_INT >= 24) {
+                holder.statusText.setText(Html.fromHtml(ViewString.getStatusText(status), Html.FROM_HTML_MODE_LEGACY, imgGetter, null));
+            } else {
+                holder.statusText.setText(Html.fromHtml(ViewString.getStatusText(status), imgGetter, null));
+            }
+            holder.statusText.setTextSize(pref_tl_textsize_default);
+            holder.statusText.setOnClickListener(
+                    new View.OnClickListener() {
+                        public void onClick(View v) {
+                            saveLastReadTweet(status, position);
+                        }
+                    }
+            );
+
+            holder.statusIcon.setVisibility(View.VISIBLE);
+
+            onBindViewHolderIcon(holder, status);
+        }
+    }
+
+    private boolean checkMute(Status status) {
+        try {
+            if (muteTextArray == null || muteTextArray.length == 0 || muteTextArray[0].equals(""))
+                return false;
+
+            for (final String muteItem : muteTextArray)
+                if (status.getText().indexOf(muteItem) > -1)
+                    return true;
+        } catch (Exception e) {
+        }
+        return false;
     }
 
     public void removeDataOf(List<Status> dataList) {
@@ -230,7 +270,11 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
         pref_tl_iconsize_default = (int) (context.getResources().getDisplayMetrics().density *
                 PreferenceManage.getInt(context, "pref_tl_iconsize_default",
                         (int) (context.getResources().getDisplayMetrics().density * pref_tl_iconsize_default)));
+        pref_tl_mute_text = PreferenceManage.getString(context, "pref_tl_mute_text", "");
         pref_tl_textsize_default = PreferenceManage.getFloat(context, "pref_tl_textsize_default", pref_tl_textsize_default);
+
+        if (!pref_tl_mute_text.equals(""))
+            muteTextArray = pref_tl_mute_text.split(",");
     }
 
     private void onBindViewHolderIcon(ViewHolder holder, final Status status) {
