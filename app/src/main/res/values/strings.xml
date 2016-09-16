@@ -27,7 +27,8 @@
     <string name="title_activity_oauth">OAuth Sign-in</string>
     <string name="title_activity_tlactivity">タイムライン</string>
     <string name="title_activity_vieweractivity">ビューワ</string>
-    <string name="title_tl_mute">ミュート</string>
+    <string name="title_tl_mute">本文ミュート</string>
+    <string name="title_icon_mute">アイコンミュート</string>
 
     <!-- TweetMenu -->
     <string name="tweet_reply">返信</string>
@@ -51,8 +52,13 @@
     <string name="pref_tl_api_count">The number of tweets to try and retrieve</string>
     <string name="pref_tl_api_count_value">200</string>
 
-    <string name="pref_tl_mute">ミュート</string>
-    <string name="pref_tl_mute_text">ミュート（本文）</string>
+    <string name="pref_icon_mute">アイコンミュート</string>
+    <string name="pref_icon_mute_screenname">ユーザ名</string>
+    <string name="pref_icon_mute_screenname_summary">カンマ区切り</string>
+    <string name="pref_tl_mute">本文ミュート</string>
+    <string name="pref_tl_mute_screenname">ユーザ名</string>
+    <string name="pref_tl_mute_screenname_summary">カンマ区切り</string>
+    <string name="pref_tl_mute_text">本文</string>
     <string name="pref_tl_mute_text_summary">カンマ区切り</string>
 
     <string name="pref_tl_reverse_direction">Read Direction</string>

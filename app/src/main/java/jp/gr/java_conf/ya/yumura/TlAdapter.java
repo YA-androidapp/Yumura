@@ -50,6 +50,8 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
 
     private SortedList<Status> mDataList;
 
+    private String pref_icon_mute_screenname;
+    private String pref_tl_mute_screenname;
     private String pref_tl_mute_text;
 
     private String[] muteTextArray;
@@ -190,7 +192,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     public void onBindViewHolder(ViewHolder holder, final int position) {
         final Status status = mDataList.get(position);
 
-        if (checkMute(status)) {
+        if (checkTlMute(status)) {
             holder.itemView.setVisibility(View.GONE);
 
             holder.statusText.setVisibility(View.GONE);
@@ -229,14 +231,34 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
         }
     }
 
-    private boolean checkMute(Status status) {
+    private boolean checkIconMute(Status status) {
         try {
-            if (muteTextArray == null || muteTextArray.length == 0 || muteTextArray[0].equals(""))
-                return false;
-
-            for (final String muteItem : muteTextArray)
-                if (status.getText().indexOf(muteItem) > -1)
+            if (!pref_icon_mute_screenname.equals(",,")) {
+                if (pref_icon_mute_screenname.indexOf("," + status.getUser().getScreenName() + ",") > -1)
                     return true;
+                if (status.getRetweetedStatus() != null)
+                    if (pref_icon_mute_screenname.indexOf("," + status.getRetweetedStatus().getUser().getScreenName() + ",") > -1)
+                        return true;
+            }
+        } catch (Exception e) {
+        }
+        return false;
+    }
+
+    private boolean checkTlMute(Status status) {
+        try {
+            if ((muteTextArray != null) && (muteTextArray.length > 0) && (!muteTextArray[0].equals(""))) {
+                for (final String muteItem : muteTextArray)
+                    if (status.getText().indexOf(muteItem) > -1)
+                        return true;
+            }
+            if (!pref_tl_mute_screenname.equals(",,")) {
+                if (pref_tl_mute_screenname.indexOf("," + status.getUser().getScreenName() + ",") > -1)
+                    return true;
+                if (status.getRetweetedStatus() != null)
+                    if (pref_tl_mute_screenname.indexOf("," + status.getRetweetedStatus().getUser().getScreenName() + ",") > -1)
+                        return true;
+            }
         } catch (Exception e) {
         }
         return false;
@@ -266,11 +288,13 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
 
     private void getPreferences() {
         pref_debug_write_logcat = PreferenceManage.getBoolean(context, "pref_debug_write_logcat", false);
-        pref_tl_reverse_direction = PreferenceManage.getBoolean(context, "pref_tl_textsize_default", pref_tl_reverse_direction);
         pref_tl_iconsize_default = (int) (context.getResources().getDisplayMetrics().density *
                 PreferenceManage.getInt(context, "pref_tl_iconsize_default",
                         (int) (context.getResources().getDisplayMetrics().density * pref_tl_iconsize_default)));
+        pref_icon_mute_screenname = "," + PreferenceManage.getString(context, "pref_icon_mute_screenname", "") + ",";
+        pref_tl_mute_screenname = "," + PreferenceManage.getString(context, "pref_tl_mute_screenname", "") + ",";
         pref_tl_mute_text = PreferenceManage.getString(context, "pref_tl_mute_text", "");
+        pref_tl_reverse_direction = PreferenceManage.getBoolean(context, "pref_tl_textsize_default", pref_tl_reverse_direction);
         pref_tl_textsize_default = PreferenceManage.getFloat(context, "pref_tl_textsize_default", pref_tl_textsize_default);
 
         if (!pref_tl_mute_text.equals(""))
@@ -279,12 +303,21 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
 
     private void onBindViewHolderIcon(ViewHolder holder, final Status status) {
         if (status.getRetweetedStatus() != null) {
-            holder.statusIcon.setImageUrl(status.getRetweetedStatus().getUser().getProfileImageURLHttps(), mImageLoader);
             holder.statusIconRt.setVisibility(View.VISIBLE);
-            holder.statusIconRt.setImageUrl(status.getUser().getProfileImageURLHttps(), mImageLoader);
+            if (checkIconMute(status)) {
+                holder.statusIcon.setImageResource(android.R.color.transparent);
+                holder.statusIconRt.setImageResource(android.R.color.transparent);
+            } else{
+                holder.statusIcon.setImageUrl(status.getRetweetedStatus().getUser().getProfileImageURLHttps(), mImageLoader);
+                holder.statusIconRt.setImageUrl(status.getUser().getProfileImageURLHttps(), mImageLoader);
+            }
         } else {
-            holder.statusIcon.setImageUrl(status.getUser().getProfileImageURLHttps(), mImageLoader);
             holder.statusIconRt.setVisibility(View.INVISIBLE);
+            if (checkIconMute(status)) {
+                holder.statusIcon.setImageResource(android.R.color.transparent);
+            } else{
+                holder.statusIcon.setImageUrl(status.getUser().getProfileImageURLHttps(), mImageLoader);
+            }
             holder.statusIconRt.setImageResource(android.R.color.transparent);
         }
         final android.widget.LinearLayout.LayoutParams layoutParams = new android.widget.LinearLayout.LayoutParams(pref_tl_iconsize_default / 2, pref_tl_iconsize_default / 2);
