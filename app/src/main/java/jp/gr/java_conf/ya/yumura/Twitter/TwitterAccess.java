@@ -91,7 +91,7 @@ public class TwitterAccess {
                 adapter.addDataOf(statuses);
                 adapter.notifyDataSetChanged();
                 adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toBinaryString(statuses.size()) + " tweets");
+                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets");
                 // adapter.notifyItemRangeChanged(0, statuses.size());
                 adapter.notifyDataSetChanged();
             }
@@ -103,7 +103,7 @@ public class TwitterAccess {
                 adapter.addDataOf(statuses);
                 adapter.notifyDataSetChanged();
                 adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toBinaryString(statuses.size()) + " tweets");
+                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets");
                 // adapter.notifyItemRangeChanged(0, statuses.size());
                 adapter.notifyDataSetChanged();
             }
@@ -115,7 +115,7 @@ public class TwitterAccess {
                 adapter.addDataOf(statuses);
                 adapter.notifyDataSetChanged();
                 adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toBinaryString(statuses.size()) + " tweets");
+                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets");
                 // adapter.notifyItemRangeChanged(0, statuses.size());
                 adapter.notifyDataSetChanged();
             }
@@ -127,7 +127,7 @@ public class TwitterAccess {
                 adapter.addDataOf(statuses);
                 adapter.notifyDataSetChanged();
                 adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toBinaryString(statuses.size()) + " tweets");
+                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets");
                 // adapter.notifyItemRangeChanged(0, statuses.size());
                 adapter.notifyDataSetChanged();
             }
@@ -147,7 +147,7 @@ public class TwitterAccess {
                 adapter.addDataOf(queryResult.getTweets());
                 adapter.notifyDataSetChanged();
                 adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toBinaryString(queryResult.getTweets().size()) + " tweets");
+                adapter.showSnackbar("Loaded", Integer.toString(queryResult.getTweets().size()) + " tweets");
                 // adapter.notifyItemRangeChanged(0, queryResult.getTweets().size());
                 adapter.notifyDataSetChanged();
             }

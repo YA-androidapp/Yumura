@@ -16,10 +16,10 @@ public class CheckConnectivity {
         if (context != null) {
             final ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             final NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-            return activeNetwork.isConnectedOrConnecting();
-        } else {
-            return false;
+            if (activeNetwork != null)
+                return activeNetwork.isConnectedOrConnecting() || activeNetwork.isConnected();
         }
+        return false;
     }
 
     public static String getConnectedType() {
@@ -27,7 +27,7 @@ public class CheckConnectivity {
         if (context != null) {
             final ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             final NetworkInfo info = manager.getActiveNetworkInfo();
-            if ((info != null) && ((info.isConnected() == true) || (info.isConnectedOrConnecting() == true))) {
+            if ((info != null) && (info.isConnected()) || (info.isConnectedOrConnecting())) {
                 switch (info.getType()) {
                     case ConnectivityManager.TYPE_WIFI:         // Wifi
                         return "WIFI";

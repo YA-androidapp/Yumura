@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -24,6 +25,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -34,6 +36,7 @@ import java.util.List;
 import jp.gr.java_conf.ya.yumura.Layout.EndlessScrollListener;
 import jp.gr.java_conf.ya.yumura.Layout.LinearLayoutManagerWithSmoothScroller;
 import jp.gr.java_conf.ya.yumura.Network.CheckConnectivity;
+import jp.gr.java_conf.ya.yumura.Network.ConnectionReceiver;
 import jp.gr.java_conf.ya.yumura.Setting.PreferenceActivity;
 import jp.gr.java_conf.ya.yumura.Setting.PreferenceManage;
 import jp.gr.java_conf.ya.yumura.String.IntentString;
@@ -50,7 +53,7 @@ import twitter4j.StatusUpdate;
 import twitter4j.auth.OAuthAuthorization;
 import twitter4j.auth.RequestToken;
 
-public class TlActivity extends AppCompatActivity {
+public class TlActivity extends AppCompatActivity implements ConnectionReceiver.Observer {
     public static OAuthAuthorization oAuthAuthorization;
 
     public static RequestToken requestToken;
@@ -59,9 +62,12 @@ public class TlActivity extends AppCompatActivity {
     public static String KEY_URL_ITEMS = "UrlItems";
     private static String[] autoCompleteItems_EnterUrl;
     private static Date preGetAutoCompleteItems_EnterUrl = new Date(0);
+    private boolean isConnected = false;
     private boolean pref_debug_write_logcat = true;
+    private ConnectionReceiver receiver;
     private Date preOnLoadMoreTime = new Date(0);
     private Date preSwipeRefreshTime = new Date(0);
+    private FloatingActionButton fab;
     private int pref_tl_api_count = 200;
     private RecyclerView recyclerView;
     private SwipeRefreshLayout swipeRefresh;
@@ -162,11 +168,21 @@ public class TlActivity extends AppCompatActivity {
             Intent intent = new Intent(this, PreferenceActivity.class);
             startActivity(intent);
             return true;
-        } else if (id ==R.id.action_tl_search) {
+        } else if (id == R.id.action_tl_search) {
             (new DialogFragment_TlSearch()).show(getSupportFragmentManager(), getString(R.string.action_tl_search));
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onConnect() {
+        isConnected = true;
+        Toast.makeText(this, getString(R.string.message_on_connect), Toast.LENGTH_SHORT).show();
+
+        if (fab == null)
+            fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setImageResource(android.R.drawable.ic_menu_edit);
     }
 
     @Override
@@ -176,6 +192,8 @@ public class TlActivity extends AppCompatActivity {
         setViews();
 
         if (CheckConnectivity.isConnected()) {
+            isConnected = true;
+
             if (KeyManage.getUserCount() < 1) {
                 (new DialogFragment_ChangeOAuthKey()).show(getSupportFragmentManager(), getString(R.string.action_change_consumer_key));
             } else {
@@ -187,6 +205,30 @@ public class TlActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onPause() {
+        unregisterConnectionReceiver();
+
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        unregisterConnectionReceiver();
+
+        super.onDestroy();
+    }
+
+    @Override
+    public void onDisconnect() {
+        isConnected = false;
+        Toast.makeText(this, getString(R.string.message_on_disconnect), Toast.LENGTH_SHORT).show();
+
+        if (fab == null)
+            fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
 
@@ -195,6 +237,8 @@ public class TlActivity extends AppCompatActivity {
         // pref_tl_reverse_direction = PreferenceManage.getBoolean(this, "pref_tl_reverse_direction", false);
         // pref_tl_theme_list = PreferenceManage.getString(this, "pref_tl_theme_list", "");
         pref_debug_write_logcat = PreferenceManage.getBoolean(this, "pref_debug_write_logcat", false);
+
+        registerConnectionReceiver();
     }
 
     private final void changeRefreshLayoutIcon(boolean enable) {
@@ -339,6 +383,28 @@ public class TlActivity extends AppCompatActivity {
         }
     }
 
+    private final void registerConnectionReceiver() {
+        receiver = new ConnectionReceiver(this);
+        if (receiver != null) {
+            final IntentFilter intentFilter = new IntentFilter();
+            intentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
+            try {
+                registerReceiver(receiver, intentFilter);
+            } catch (Exception e) {
+                unregisterConnectionReceiver();
+            }
+        }
+    }
+
+    private final void unregisterConnectionReceiver() {
+        if (receiver != null) {
+            try {
+                unregisterReceiver(receiver);
+            } catch (Exception e) {
+            }
+        }
+    }
+
     private final void setRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManagerWithSmoothScroller(this));
         recyclerView.setAdapter(adapter);
@@ -359,7 +425,7 @@ public class TlActivity extends AppCompatActivity {
             actionBar.setTitle(searchWord);
             actionBar.setDisplayShowTitleEnabled(true);
             if (searchWord != null && !searchWord.equals("")) {
-                if (CheckConnectivity.isConnected()) {
+                if (isConnected) {
                     if (searchViewString.equals(searchWord)) {
                         if (pref_debug_write_logcat)
                             Log.v("Yumura", "(searchViewString.equals(" + searchWord + "))");
@@ -411,7 +477,7 @@ public class TlActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -656,7 +722,7 @@ public class TlActivity extends AppCompatActivity {
                                     adapter.scrollTo(position);
                                 } else if (menuItemArray[which].equals(getString(R.string.action_tl_search_createat))) {
                                     final Calendar cal = Cal.toCalendar(editText.getText().toString());
-                                    if(cal!=null) {
+                                    if (cal != null) {
                                         final int position = BinarySearchUtil.binary_search_time(cal.getTime().getTime(), // 投稿日時
                                                 adapter.getList(), ((LinearLayoutManager) adapter.getRecyclerView().getLayoutManager()).findFirstVisibleItemPosition());
 

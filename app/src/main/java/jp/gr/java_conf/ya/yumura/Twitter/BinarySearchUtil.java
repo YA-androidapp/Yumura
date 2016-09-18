@@ -1,11 +1,7 @@
 package jp.gr.java_conf.ya.yumura.Twitter; // Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
 
 import android.support.v7.util.SortedList;
-import android.util.Log;
 
-import java.util.Date;
-
-import jp.gr.java_conf.ya.yumura.String.ViewString;
 import twitter4j.Status;
 
 public final class BinarySearchUtil {
