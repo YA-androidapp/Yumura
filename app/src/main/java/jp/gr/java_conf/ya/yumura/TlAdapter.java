@@ -18,6 +18,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.Volley;
@@ -77,47 +78,61 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
         return viewHolder;
     }
 
-    public void addDataOf(List<Status> dataList) {
-        mDataList.addAll(dataList);
-        notifyDataSetChanged();
+    public void addDataOf(final List<Status> dataList) {
+        if (pref_debug_write_logcat) Log.v("Yumura", "addDataOf()");
+        if (dataList != null) {
+            ((Activity) context).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        mDataList.addAll(dataList);
+                        notifyDataSetChanged();
+                    } catch (Exception e) {
+                        if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                    }
 
-        if (recyclerView != null) {
-            if (pref_tl_reverse_direction) {
-                // true: From bottom to top
-                int firstVisiblePosition = 0;
-                try {
-                    firstVisiblePosition = ((LinearLayoutManager) (recyclerView.getLayoutManager())).findFirstVisibleItemPosition();
-                } catch (Exception e) {
-                    if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                    if (recyclerView != null) {
+                        if (pref_tl_reverse_direction) {
+                            // true: From bottom to top
+                            try {
+                                final int firstVisiblePosition = ((LinearLayoutManager) (recyclerView.getLayoutManager())).findFirstVisibleItemPosition();
+                                scrollTo(firstVisiblePosition + dataList.size());
+                            } catch (Exception e) {
+                                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                            }
+                        }
+                    }
                 }
-                try {
-                    recyclerView.smoothScrollToPosition(firstVisiblePosition + dataList.size() - 1);
-                } catch (Exception e) {
-                    if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
-                }
-            }
+            });
         }
     }
 
-    public void addDataOf(Status data) {
-        mDataList.add(data);
-        notifyDataSetChanged();
+    public void addDataOf(final Status data) {
+        if (pref_debug_write_logcat) Log.v("Yumura", "addDataOf()");
+        if (data != null) {
+            ((Activity) context).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        mDataList.add(data);
+                        notifyDataSetChanged();
+                    } catch (Exception e) {
+                        if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                    }
 
-        if (recyclerView != null) {
-            if (pref_tl_reverse_direction) {
-                // true: From bottom to top
-                int firstVisiblePosition = 0;
-                try {
-                    firstVisiblePosition = ((LinearLayoutManager) (recyclerView.getLayoutManager())).findFirstVisibleItemPosition();
-                } catch (Exception e) {
-                    if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                    if (recyclerView != null) {
+                        if (pref_tl_reverse_direction) {
+                            // true: From bottom to top
+                            try {
+                                final int firstVisiblePosition = ((LinearLayoutManager) (recyclerView.getLayoutManager())).findFirstVisibleItemPosition();
+                                scrollTo(firstVisiblePosition);
+                            } catch (Exception e) {
+                                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                            }
+                        }
+                    }
                 }
-                try {
-                    recyclerView.smoothScrollToPosition(firstVisiblePosition);
-                } catch (Exception e) {
-                    if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
-                }
-            }
+            });
         }
     }
 
@@ -166,23 +181,26 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     }
 
     public final void moveToUnread() {
-        long lastReadTweet = -1;
-        lastReadTweet = PreferenceManage.getLong(context, PreferenceManage.Last_Read_Tweet, 0);
+        long lastReadTweet = PreferenceManage.getLong(context, PreferenceManage.Last_Read_Tweet, 0);
         if (pref_debug_write_logcat)
             Log.v("Yumura", "lastReadTweet: " + Long.toString(lastReadTweet));
-        if (lastReadTweet > 0) {
 
+        if (lastReadTweet > 0) {
             if (pref_debug_write_logcat) Log.v("Yumura", "id[0]: " + getItemId(0));
             if (pref_debug_write_logcat)
                 Log.v("Yumura", "id[adapter.getItemCount()-1]: " + getItemId(getItemCount() - 1));
 
-            if ((getItemId(0) >= lastReadTweet) && (getItemId(getItemCount() - 1) <= lastReadTweet)) {
-                int position = BinarySearchUtil.binary_search_id(lastReadTweet, getList());
-                scrollTo(position);
-                if (pref_debug_write_logcat)
-                    Log.v("Yumura", "Last_Read_Tweet getLong " + Long.toString(getItemId(position)) + " " + position);
-            } else {
-                scrollTo(getItemCount() - 1);
+            try {
+                if ((getItemId(0) >= lastReadTweet) && (getItemId(getItemCount() - 1) <= lastReadTweet)) {
+                    int position = BinarySearchUtil.binary_search_id(lastReadTweet, getList());
+                    scrollTo(position);
+                    if (pref_debug_write_logcat)
+                        Log.v("Yumura", "Last_Read_Tweet getLong " + Long.toString(getItemId(position)) + " " + position);
+                } else {
+                    scrollTo(getItemCount() - 1);
+                }
+            } catch (Exception e) {
+                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
             }
         }
     }
@@ -241,6 +259,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
                         return true;
             }
         } catch (Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
         return false;
     }
@@ -260,6 +279,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
                         return true;
             }
         } catch (Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
         return false;
     }
@@ -274,16 +294,43 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
 
     public void scrollTo(final int pos) {
         try {
-            recyclerView.smoothScrollToPosition(pos - 1);
+            ((Activity) context).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    recyclerView.smoothScrollToPosition(pos);
+                }
+            });
+        } catch (Exception e) {
+        }
+    }
+
+    public void showSnackbar(final String actionText, final String text) {
+        try {
+            ((Activity) context).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    final FloatingActionButton fab = (FloatingActionButton) ((Activity) context).findViewById(R.id.fab);
+                    if (fab != null)
+                        Snackbar.make(fab, actionText + ": " + text, Snackbar.LENGTH_LONG)
+                                .setAction(actionText, null).show();
+                }
+            });
         } catch (Exception e) {
             if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
     }
 
-    public void showSnackbar(final String text, final String actionText) {
-        final FloatingActionButton fab = (FloatingActionButton) ((Activity) context).findViewById(R.id.fab);
-        Snackbar.make(fab, actionText + ": " + text, Snackbar.LENGTH_LONG)
-                .setAction(actionText, null).show();
+    public void showToast(final String text) {
+        try {
+            ((Activity) context).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(context, text, Toast.LENGTH_LONG).show();
+                }
+            });
+        } catch (Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+        }
     }
 
     private void getPreferences() {
@@ -307,7 +354,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
             if (checkIconMute(status)) {
                 holder.statusIcon.setImageResource(android.R.color.transparent);
                 holder.statusIconRt.setImageResource(android.R.color.transparent);
-            } else{
+            } else {
                 holder.statusIcon.setImageUrl(status.getRetweetedStatus().getUser().getProfileImageURLHttps(), mImageLoader);
                 holder.statusIconRt.setImageUrl(status.getUser().getProfileImageURLHttps(), mImageLoader);
             }
@@ -315,7 +362,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
             holder.statusIconRt.setVisibility(View.INVISIBLE);
             if (checkIconMute(status)) {
                 holder.statusIcon.setImageResource(android.R.color.transparent);
-            } else{
+            } else {
                 holder.statusIcon.setImageUrl(status.getUser().getProfileImageURLHttps(), mImageLoader);
             }
             holder.statusIconRt.setImageResource(android.R.color.transparent);

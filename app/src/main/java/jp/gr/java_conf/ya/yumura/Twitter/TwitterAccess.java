@@ -12,6 +12,7 @@ import java.util.Map;
 
 import jp.gr.java_conf.ya.yumura.App;
 import jp.gr.java_conf.ya.yumura.Cache.LruCacheMap;
+import jp.gr.java_conf.ya.yumura.Network.CommunicationVolume;
 import jp.gr.java_conf.ya.yumura.Setting.PreferenceManage;
 import jp.gr.java_conf.ya.yumura.String.ViewString;
 import jp.gr.java_conf.ya.yumura.TlAdapter;
@@ -49,6 +50,7 @@ public class TwitterAccess {
     private static final String URL_TWITTER_LIST = "lists";
     private static final String URL_TWITTER_STATUS = "status";
     private static boolean pref_debug_write_logcat = false;
+    private static long[] preCommunicationVolume = {0L, 0L};
     private static Map<String, Long> cacheIdSn = new LruCacheMap<>(100);
     private static Map<Map<String, String>, Long> cacheIdSnSlug = new LruCacheMap<>(100);
     private static TlAdapter adapter;
@@ -79,56 +81,54 @@ public class TwitterAccess {
                 adapter.removeDataOf(destroyedStatuss);
                 adapter.notifyDataSetChanged();
                 adapter.showSnackbar("Removed", ViewString.getScreennameAndText(destroyedStatus));
-                // if (adapter.indexOf(destroyedStatus) > -1)
-                //     adapter.notifyItemRemoved(adapter.indexOf(destroyedStatus));
                 adapter.notifyDataSetChanged();
             }
         }
 
         @Override
         public void gotHomeTimeline(final ResponseList<Status> statuses) {
+            if (pref_debug_write_logcat) Log.v("Yumura", "gotHomeTimeline()");
             if (adapter != null) {
                 adapter.addDataOf(statuses);
                 adapter.notifyDataSetChanged();
                 adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets");
-                // adapter.notifyItemRangeChanged(0, statuses.size());
+                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets ; "+getCommunicationVolumeOfThisApp()+" B");
                 adapter.notifyDataSetChanged();
             }
         }
 
         @Override
         public void gotMentions(final ResponseList<Status> statuses) {
+            if (pref_debug_write_logcat) Log.v("Yumura", "gotMentions()");
             if (adapter != null) {
                 adapter.addDataOf(statuses);
                 adapter.notifyDataSetChanged();
                 adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets");
-                // adapter.notifyItemRangeChanged(0, statuses.size());
+                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets ; "+getCommunicationVolumeOfThisApp()+" B");
                 adapter.notifyDataSetChanged();
             }
         }
 
         @Override
         public void gotUserListStatuses(final ResponseList<Status> statuses) {
+            if (pref_debug_write_logcat) Log.v("Yumura", "gotUserListStatuses()");
             if (adapter != null) {
                 adapter.addDataOf(statuses);
                 adapter.notifyDataSetChanged();
                 adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets");
-                // adapter.notifyItemRangeChanged(0, statuses.size());
+                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets ; "+getCommunicationVolumeOfThisApp()+" B");
                 adapter.notifyDataSetChanged();
             }
         }
 
         @Override
         public void gotUserTimeline(final ResponseList<Status> statuses) {
+            if (pref_debug_write_logcat) Log.v("Yumura", "gotUserTimeline()");
             if (adapter != null) {
                 adapter.addDataOf(statuses);
                 adapter.notifyDataSetChanged();
                 adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets");
-                // adapter.notifyItemRangeChanged(0, statuses.size());
+                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets ; "+getCommunicationVolumeOfThisApp()+" B");
                 adapter.notifyDataSetChanged();
             }
         }
@@ -143,12 +143,12 @@ public class TwitterAccess {
 
         @Override
         public void searched(final QueryResult queryResult) {
+            if (pref_debug_write_logcat) Log.v("Yumura", "searched()");
             if (adapter != null) {
                 adapter.addDataOf(queryResult.getTweets());
                 adapter.notifyDataSetChanged();
                 adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toString(queryResult.getTweets().size()) + " tweets");
-                // adapter.notifyItemRangeChanged(0, queryResult.getTweets().size());
+                adapter.showSnackbar("Loaded", Integer.toString(queryResult.getTweets().size()) + " tweets ; "+getCommunicationVolumeOfThisApp()+" B");
                 adapter.notifyDataSetChanged();
             }
         }
@@ -284,6 +284,25 @@ public class TwitterAccess {
         }
 
         return urls.toArray(new String[0]);
+    }
+
+    private static String getCommunicationVolumeOfThisApp() {
+        try {
+            if (pref_debug_write_logcat) Log.v("Yumura", "getCommunicationVolumeOfThisApp()");
+            final long[] currentCommunicationVolume = CommunicationVolume.getCommunicationVolumeOfThisApp();
+            final long uidTxBytes = currentCommunicationVolume[0] - preCommunicationVolume[0];
+            final long uidRxBytes = currentCommunicationVolume[1] - preCommunicationVolume[1];
+            preCommunicationVolume = currentCommunicationVolume;
+
+            final long uidBytes = uidTxBytes + uidRxBytes;
+
+            if (pref_debug_write_logcat)
+                Log.v("Yumura", "getCommunicationVolumeOfThisApp() " + Long.toString(uidBytes));
+
+            return Long.toString(uidBytes);
+        }catch(Exception e){
+            return "";
+        }
     }
 
     public void createFavorite(final String screenName, final Status status) {
@@ -470,6 +489,9 @@ public class TwitterAccess {
     }
 
     public String[] loadTimeline(final String url, final int count, final long maxId, final int page, final long sinceId) {
+
+        preCommunicationVolume = CommunicationVolume.getCommunicationVolumeOfThisApp();
+
         List<String> result = new ArrayList<>();
 
         // " https://twitter.comhttps://twitter.com/#auth https://twitter.com/foobarhttps://twitter.com/foobar/lists/hogehttps://twitter.com/search?q=#ntvhttps://twitter.com/mentions "
