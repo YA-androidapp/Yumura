@@ -59,6 +59,10 @@
     <string name="pref_icon_mute">アイコンミュート</string>
     <string name="pref_icon_mute_screenname">ユーザ名</string>
     <string name="pref_icon_mute_screenname_summary">カンマ区切り</string>
+
+    <string name="pref_tl_img_zoom">インライン画像表示倍率</string>
+    <string name="pref_tl_img_zoom_value">1</string>
+
     <string name="pref_tl_mute">本文ミュート</string>
     <string name="pref_tl_mute_screenname">ユーザ名</string>
     <string name="pref_tl_mute_screenname_summary">カンマ区切り</string>

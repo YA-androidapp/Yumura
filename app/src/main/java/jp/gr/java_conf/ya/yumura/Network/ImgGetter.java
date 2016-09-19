@@ -27,7 +27,7 @@ public class ImgGetter implements Html.ImageGetter {
         this.container = t;
         this.context = c;
 
-        pref_tl_img_zoom = PreferenceManage.getFloat(c, "pref_tl_img_zoom", 3.0f);
+        pref_tl_img_zoom = PreferenceManage.getFloat(c, "pref_tl_img_zoom", 1.0f);
     }
 
     public Drawable getDrawable(final String source) {
@@ -66,14 +66,9 @@ public class ImgGetter implements Html.ImageGetter {
 
         @Override
         protected void onPostExecute(Drawable result) {
-            // set the correct bound according to the result from HTTP call
             urlDrawable.setBounds(0, 0, (int) (pref_tl_img_zoom * result.getIntrinsicWidth()), (int) (pref_tl_img_zoom * result.getIntrinsicHeight()));
-
-            // change the reference of the current drawable to the result
-            // from the HTTP call
             urlDrawable.drawable = result;
 
-            // redraw the image by invalidating the container
             ImgGetter.this.container.invalidate();
         }
 
@@ -82,6 +77,7 @@ public class ImgGetter implements Html.ImageGetter {
                 final InputStream is = fetch(urlString);
                 final Drawable drawable = Drawable.createFromStream(is, "src");
                 drawable.setBounds(0, 0, (int) (pref_tl_img_zoom * drawable.getIntrinsicWidth()), (int) (pref_tl_img_zoom * drawable.getIntrinsicHeight()));
+                drawable.setAlpha(50);
                 return drawable;
             } catch (Exception e) {
                 if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());

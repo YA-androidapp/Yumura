@@ -92,7 +92,7 @@ public class TwitterAccess {
                 adapter.addDataOf(statuses);
                 adapter.notifyDataSetChanged();
                 adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets ; "+getCommunicationVolumeOfThisApp()+" B");
+                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets ; " + getCommunicationVolumeOfThisApp() + " B");
                 adapter.notifyDataSetChanged();
             }
         }
@@ -104,7 +104,7 @@ public class TwitterAccess {
                 adapter.addDataOf(statuses);
                 adapter.notifyDataSetChanged();
                 adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets ; "+getCommunicationVolumeOfThisApp()+" B");
+                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets ; " + getCommunicationVolumeOfThisApp() + " B");
                 adapter.notifyDataSetChanged();
             }
         }
@@ -116,7 +116,7 @@ public class TwitterAccess {
                 adapter.addDataOf(statuses);
                 adapter.notifyDataSetChanged();
                 adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets ; "+getCommunicationVolumeOfThisApp()+" B");
+                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets ; " + getCommunicationVolumeOfThisApp() + " B");
                 adapter.notifyDataSetChanged();
             }
         }
@@ -128,7 +128,7 @@ public class TwitterAccess {
                 adapter.addDataOf(statuses);
                 adapter.notifyDataSetChanged();
                 adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets ; "+getCommunicationVolumeOfThisApp()+" B");
+                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets ; " + getCommunicationVolumeOfThisApp() + " B");
                 adapter.notifyDataSetChanged();
             }
         }
@@ -148,7 +148,7 @@ public class TwitterAccess {
                 adapter.addDataOf(queryResult.getTweets());
                 adapter.notifyDataSetChanged();
                 adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toString(queryResult.getTweets().size()) + " tweets ; "+getCommunicationVolumeOfThisApp()+" B");
+                adapter.showSnackbar("Loaded", Integer.toString(queryResult.getTweets().size()) + " tweets ; " + getCommunicationVolumeOfThisApp() + " B");
                 adapter.notifyDataSetChanged();
             }
         }
@@ -300,7 +300,7 @@ public class TwitterAccess {
                 Log.v("Yumura", "getCommunicationVolumeOfThisApp() " + Long.toString(uidBytes));
 
             return Long.toString(uidBytes);
-        }catch(Exception e){
+        } catch (Exception e) {
             return "";
         }
     }
@@ -375,7 +375,7 @@ public class TwitterAccess {
             return cachedId;
         } else {
             // キャッシュにない場合
-            long userId = KeyManage.getIdFromScreenNameAtPreference(screenName);
+            final long userId = KeyManage.getIdFromScreenNameAtPreference(screenName);
             if (userId < 0) {
                 try {
                     cacheIdSn.put(screenName, getTwitter().showUser(screenName).getId());
@@ -417,18 +417,21 @@ public class TwitterAccess {
             } catch (Exception e) {
                 if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
             }
-            if (lists.size() > 0) {
+            if ((lists != null) && (lists.size() > 0)) {
                 for (UserList list : lists) {
-                    if (list.getName().equals(slug)) {
-                        try {
-                            cacheIdSnSlug.put(keys, list.getId());
-                        } catch (Exception e) {
-                            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
-                        }
-                        try {
-                            return list.getId();
-                        } catch (Exception e) {
-                            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                    if (list != null) {
+                        if ((list.getSlug().equals(slug))
+                                || (list.getName().toLowerCase().equals(slug.toLowerCase()))) {
+                            try {
+                                cacheIdSnSlug.put(keys, list.getId());
+                            } catch (Exception e) {
+                                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                            }
+                            try {
+                                return list.getId();
+                            } catch (Exception e) {
+                                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                            }
                         }
                     }
                 }

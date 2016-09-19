@@ -14,6 +14,8 @@ import twitter4j.Status;
 import twitter4j.URLEntity;
 
 public class ViewString {
+    private static final int imgHeight = 20;
+
     public static final SimpleDateFormat sdf_yyyyMMddHHmmssOnlyNumber = new SimpleDateFormat("yyyyMMddHHmmss", Locale.JAPAN);
     public static final SimpleDateFormat sdf_yyyyMMddHHmmssSSSOnlyNumber = new SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.JAPAN);
     public static final SimpleDateFormat sdf_yyyyMMddHHmmssSSS = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS", Locale.JAPAN);
