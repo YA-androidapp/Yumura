@@ -32,7 +32,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.function.LongFunction;
 
 import jp.gr.java_conf.ya.yumura.Layout.EndlessScrollListener;
 import jp.gr.java_conf.ya.yumura.Layout.LinearLayoutManagerWithSmoothScroller;
@@ -49,6 +48,7 @@ import jp.gr.java_conf.ya.yumura.Twitter.BinarySearchUtil;
 import jp.gr.java_conf.ya.yumura.Twitter.KeyManage;
 import jp.gr.java_conf.ya.yumura.Twitter.OAuthUser;
 import jp.gr.java_conf.ya.yumura.Twitter.TwitterAccess;
+import twitter4j.ResponseList;
 import twitter4j.Status;
 import twitter4j.StatusUpdate;
 import twitter4j.auth.OAuthAuthorization;
@@ -64,7 +64,8 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
     private static String[] autoCompleteItems_EnterUrl;
     private static Date preGetAutoCompleteItems_EnterUrl = new Date(0);
     private boolean isConnected = false;
-    private boolean pref_debug_write_logcat = true;
+    private boolean pref_debug_write_logcat = false;
+    private boolean pref_tl_reverse_direction = false;
     private ConnectionReceiver receiver;
     private Date preOnLoadMoreTime = new Date(0);
     private Date preSwipeRefreshTime = new Date(0);
@@ -73,6 +74,8 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
     private RecyclerView recyclerView;
     private SwipeRefreshLayout swipeRefresh;
     private SearchView searchView;
+    private String pref_tl_move_to_unread_mute_source = "";
+    private String pref_tl_theme_list = "";
     private String searchViewString = "";
 
     private TlAdapter adapter;
@@ -186,9 +189,21 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
         fab.setImageResource(android.R.drawable.ic_menu_edit);
     }
 
+    private void getPreferences() {
+        pref_debug_write_logcat = PreferenceManage.getBoolean(this, "pref_debug_write_logcat", pref_debug_write_logcat);
+        pref_tl_api_count = PreferenceManage.getInt(this, "pref_tl_api_count", pref_tl_api_count);
+        pref_tl_move_to_unread_mute_source = PreferenceManage.getString(this, "pref_tl_move_to_unread_mute_source", pref_tl_move_to_unread_mute_source);
+        pref_tl_reverse_direction = PreferenceManage.getBoolean(this, "pref_tl_textsize_default", pref_tl_reverse_direction);
+        pref_tl_theme_list = PreferenceManage.getString(this, "pref_tl_theme_list", pref_tl_theme_list);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        getPreferences();
+
+        registerConnectionReceiver();
 
         setViews();
 
@@ -233,11 +248,7 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
     protected void onResume() {
         super.onResume();
 
-        pref_debug_write_logcat = PreferenceManage.getBoolean(this, "pref_debug_write_logcat", false);
-        pref_tl_api_count = PreferenceManage.getInt(this, "pref_tl_api_count", 200);
-        // pref_tl_reverse_direction = PreferenceManage.getBoolean(this, "pref_tl_reverse_direction", false);
-        // pref_tl_theme_list = PreferenceManage.getString(this, "pref_tl_theme_list", "");
-        pref_debug_write_logcat = PreferenceManage.getBoolean(this, "pref_debug_write_logcat", false);
+        getPreferences();
 
         registerConnectionReceiver();
     }
@@ -318,12 +329,12 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
                         requestToken = oAuthAuthorization.getOAuthRequestToken(TwitterAccess.CALLBACK_URL);
                         startActivityForResult(new Intent(Intent.ACTION_VIEW, Uri.parse(requestToken.getAuthorizationURL())), 0);
                     } catch (Exception e) {
-                        if (pref_debug_write_logcat) Log.v("Yumura", e.getMessage());
+                        if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                     }
                 }
             }).start();
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.v("Yumura", e.getMessage());
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
     }
 
@@ -347,7 +358,7 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
                 }
             }).start();
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.v("Yumura", e.getMessage());
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
     }
 
@@ -363,36 +374,69 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
     }
 
     private final void moveToUnread() {
-        long lastReadTweet = -1;
-        lastReadTweet = PreferenceManage.getLong(this, PreferenceManage.Last_Read_Tweet, 0);
-        if (pref_debug_write_logcat)
-            Log.v("Yumura", "lastReadTweet: " + Long.toString(lastReadTweet));
-        if (lastReadTweet > 0) {
-
-            if (pref_debug_write_logcat) Log.v("Yumura", "id[0]: " + adapter.getItemId(0));
-            if (pref_debug_write_logcat)
-                Log.v("Yumura", "id[adapter.getItemCount()-1]: " + adapter.getItemId(adapter.getItemCount() - 1));
-
-            if ((adapter.getItemId(0) >= lastReadTweet) && (adapter.getItemId(adapter.getItemCount() - 1) <= lastReadTweet)) {
-                int position = BinarySearchUtil.binary_search_id(lastReadTweet, adapter.getList());
-                adapter.scrollTo(position);
-                if (pref_debug_write_logcat)
-                    Log.v("Yumura", "Last_Read_Tweet getLong " + Long.toString(adapter.getItemId(position)) + " " + position);
-            } else {
-                adapter.scrollTo(adapter.getItemCount() - 1);
+        if (pref_debug_write_logcat) {
+            try {
+                Log.i("Yumura", "id[0]: " + adapter.getItemId(0));
+                Log.i("Yumura", "id[adapter.getItemCount()-1]: " + adapter.getItemId(adapter.getItemCount() - 1));
+            } catch (Exception e) {
             }
+        }
+        try {
+            long lastReadTweet = PreferenceManage.getLong(this, PreferenceManage.Last_Read_Tweet, 0);
+            if (pref_debug_write_logcat)
+                Log.i("Yumura", "lastReadTweet: " + Long.toString(lastReadTweet));
+            if ((lastReadTweet > 0) && (adapter.getItemId(0) >= lastReadTweet) && (adapter.getItemId(adapter.getItemCount() - 2) <= lastReadTweet)) {
+                final int position = BinarySearchUtil.binary_search_id(lastReadTweet, adapter.getList());
+                adapter.scrollTo(position);
+                return;
+            } else {
+                final Status status = TwitterAccess.getStatusJustBefore(KeyManage.getCurrentUser().screenName);
+                if ((status != null) && (("," + pref_tl_move_to_unread_mute_source + ",").indexOf("," + status.getSource() + ",") == -1)) {
+                    lastReadTweet = status.getId();
+                    if ((lastReadTweet > 0) && (adapter.getItemId(0) >= lastReadTweet) && (adapter.getItemId(adapter.getItemCount() - 2) <= lastReadTweet)) {
+                        final int position = BinarySearchUtil.binary_search_id(lastReadTweet, adapter.getList());
+                        adapter.scrollTo(position);
+                        return;
+                    }
+                } else {
+                    ResponseList<Status> responseList = TwitterAccess.getStatusesJustBefore(KeyManage.getCurrentUser().screenName);
+                    if (responseList != null) {
+                        for (Status s : responseList) {
+                            if ((s != null) && (("," + pref_tl_move_to_unread_mute_source + ",").indexOf("," + s.getSource() + ",") == -1)) {
+                                lastReadTweet = s.getId();
+                                if ((lastReadTweet > 0) && (adapter.getItemId(0) >= lastReadTweet) && (adapter.getItemId(adapter.getItemCount() - 2) <= lastReadTweet)) {
+                                    final int position = BinarySearchUtil.binary_search_id(lastReadTweet, adapter.getList());
+                                    adapter.scrollTo(position);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (pref_tl_reverse_direction) {
+                // true: From bottom to top
+                adapter.scrollTo(adapter.getItemCount() - 2);
+            }
+        } catch (Exception e) {
         }
     }
 
     private final void registerConnectionReceiver() {
-        receiver = new ConnectionReceiver(this);
-        if (receiver != null) {
-            final IntentFilter intentFilter = new IntentFilter();
-            intentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
+        if (receiver == null) {
             try {
-                registerReceiver(receiver, intentFilter);
+                receiver = new ConnectionReceiver(this);
+                if (receiver != null) {
+                    final IntentFilter intentFilter = new IntentFilter();
+                    intentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
+                    try {
+                        registerReceiver(receiver, intentFilter);
+                    } catch (Exception e) {
+                        unregisterConnectionReceiver();
+                    }
+                }
             } catch (Exception e) {
-                unregisterConnectionReceiver();
             }
         }
     }
@@ -401,6 +445,7 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
         if (receiver != null) {
             try {
                 unregisterReceiver(receiver);
+                receiver = null;
             } catch (Exception e) {
             }
         }
@@ -420,7 +465,7 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
     }
 
     private final boolean setSearchWord(final String searchWord) {
-        if (pref_debug_write_logcat) Log.v("Yumura", "setSearchWord(" + searchWord + ")");
+        if (pref_debug_write_logcat) Log.i("Yumura", "setSearchWord(" + searchWord + ")");
         try {
             final ActionBar actionBar = getSupportActionBar();
             actionBar.setTitle(searchWord);
@@ -429,7 +474,7 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
                 if (isConnected) {
                     if (searchViewString.equals(searchWord)) {
                         if (pref_debug_write_logcat)
-                            Log.v("Yumura", "(searchViewString.equals(" + searchWord + "))");
+                            Log.i("Yumura", "(searchViewString.equals(" + searchWord + "))");
                         if (KeyManage.getUserCount() > 0) {
                             twitterAccess = new TwitterAccess(adapter);
                             if (adapter.getItemCount() < 1) {
@@ -446,18 +491,18 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
                         }
                     } else {
                         if (pref_debug_write_logcat)
-                            Log.v("Yumura", "!(searchViewString.equals(" + searchWord + "))");
+                            Log.i("Yumura", "!(searchViewString.equals(" + searchWord + "))");
                         searchViewString = searchWord;
                         if (KeyManage.getUserCount() > 0) {
                             if (pref_debug_write_logcat)
-                                Log.v("Yumura", "(KeyManage.getUserCount() > 0)");
+                                Log.i("Yumura", "(KeyManage.getUserCount() > 0)");
                             adapter.clearData();
                             adapter.notifyDataSetChanged();
 
                             twitterAccess = new TwitterAccess(adapter);
                             twitterAccess.loadTimeline(searchViewString, pref_tl_api_count, -1, -1, -1);
                             adapter.notifyDataSetChanged();
-                            if (pref_debug_write_logcat) Log.v("Yumura", "notifyDataSetChanged()");
+                            if (pref_debug_write_logcat) Log.i("Yumura", "notifyDataSetChanged()");
                         }
                     }
                     changeRefreshLayoutIcon(false);
@@ -467,7 +512,7 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
                 searchView.clearFocus();
             actionBar.collapseActionView();
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.v("Yumura", e.getMessage());
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
 
         return false;
@@ -494,9 +539,9 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                if (pref_debug_write_logcat) Log.v("Yumura", "onRefresh()");
+                if (pref_debug_write_logcat) Log.i("Yumura", "onRefresh()");
                 if (pref_debug_write_logcat)
-                    Log.v("Yumura", "Time.differenceMinutes(preSwipeRefreshTime): "
+                    Log.i("Yumura", "Time.differenceMinutes(preSwipeRefreshTime): "
                             + Integer.toString(Time.differenceMinutes(preSwipeRefreshTime)));
 
                 loadTimelineUpper(true);
@@ -523,7 +568,7 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
             } else {
                 try {
                     if (pref_debug_write_logcat)
-                        Log.v("Yumura", "loadTimeline(" + searchViewString + ", " + Integer.toString(pref_tl_api_count)
+                        Log.i("Yumura", "loadTimeline(" + searchViewString + ", " + Integer.toString(pref_tl_api_count)
                                 + ", -1, -1, " + Long.toString(adapter.getList().get(0).getId() + 1) + ")");
 
                     PreferenceManage.putLong(TlActivity.this, PreferenceManage.Last_Read_Tweet, adapter.getList().get(0).getId());
@@ -533,7 +578,7 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
                             -1, // page
                             (upper ? (adapter.getList().get(0).getId() + 1) : -1)); // sinceId
                 } catch (Exception e) {
-                    if (pref_debug_write_logcat) Log.w("Yumura", e.getMessage());
+                    if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                     twitterAccess.loadTimeline(searchViewString, pref_tl_api_count, -1, -1, -1);
                 }
             }

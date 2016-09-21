@@ -63,6 +63,9 @@
     <string name="pref_tl_img_zoom">インライン画像表示倍率</string>
     <string name="pref_tl_img_zoom_value">1</string>
 
+    <string name="pref_tl_move_to_unread_mute_source">未読管理で無視するクライアント名</string>
+    <string name="pref_tl_move_to_unread_mute_source_summary">>未読管理で無視するクライアント名をカンマ区切りで指定します</string>
+
     <string name="pref_tl_mute">本文ミュート</string>
     <string name="pref_tl_mute_screenname">ユーザ名</string>
     <string name="pref_tl_mute_screenname_summary">カンマ区切り</string>
@@ -83,8 +86,8 @@
 
     <string name="pref_tl_theme_list">Theme</string>
     <string-array name="pref_tl_theme_list_titles">
-        <item>Light</item>
         <item>Dark</item>
+        <item>Light</item>
         <item>Comply with the Twitter Web</item>
     </string-array>
     <string-array name="pref_tl_theme_list_values">

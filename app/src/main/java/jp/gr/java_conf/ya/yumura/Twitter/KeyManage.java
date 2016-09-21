@@ -64,15 +64,15 @@ public class KeyManage {
         return null;
     }
 
-    public static void setCurrentUser(final long userId) {
-        if (userId > -1) {
-            setCurrentUser(getUser(userId));
-        }
-    }
-
     public static void setCurrentUser(final OAuthUser oauthUser) {
         if (oauthUser != null) {
             currentUser = oauthUser;
+        }
+    }
+
+    public static void setCurrentUser(final long userId) {
+        if (userId > -1) {
+            setCurrentUser(getUser(userId));
         }
     }
 
@@ -146,35 +146,35 @@ public class KeyManage {
 
         final ArrayList<String> ids = new ArrayList<>();
         final Map<String, ?> map = keyPreferences.getAll();
-        if (pref_debug_write_logcat) Log.v("Yumura", "getAll");
+        if (pref_debug_write_logcat) Log.i("Yumura", "getAll");
 
         if ((map == null) || (map.isEmpty())) {
-            if (pref_debug_write_logcat) Log.v("Yumura", "null");
+            if (pref_debug_write_logcat) Log.i("Yumura", "null");
             return null;
         } else {
-            if (pref_debug_write_logcat) Log.v("Yumura", "!null");
+            if (pref_debug_write_logcat) Log.i("Yumura", "!null");
             // if(addAllAccount)
             //     ids.add("All Accounts");
 
             myCrypt = new MyCrypt();
-            if (pref_debug_write_logcat) Log.v("Yumura", "myCrypt");
+            if (pref_debug_write_logcat) Log.i("Yumura", "myCrypt");
 
             for (final Map.Entry<String, ?> entry : map.entrySet()) {
                 final String key = entry.getKey();
-                if (pref_debug_write_logcat) Log.v("Yumura", "key: " + key);
+                if (pref_debug_write_logcat) Log.i("Yumura", "key: " + key);
                 if (key.contains("screenName")) {
                     try {
                         final String valueEncrypted = (String) entry.getValue();
                         if (pref_debug_write_logcat)
-                            Log.v("Yumura", "valueEncrypted: " + valueEncrypted);
+                            Log.i("Yumura", "valueEncrypted: " + valueEncrypted);
                         final String valueDecrypted = myCrypt.decrypt(valueEncrypted);
                         if (pref_debug_write_logcat)
-                            Log.v("Yumura", "valueDecrypted: " + valueDecrypted);
+                            Log.i("Yumura", "valueDecrypted: " + valueDecrypted);
                         final String value = prefix + valueDecrypted + suffix;
-                        if (pref_debug_write_logcat) Log.v("Yumura", "value: " + value);
+                        if (pref_debug_write_logcat) Log.i("Yumura", "value: " + value);
                         ids.add(value);
                     } catch (Exception e) {
-                        if (pref_debug_write_logcat) Log.v("Yumura", "e: " + e.getMessage());
+                        if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                     }
                 }
             }

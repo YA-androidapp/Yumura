@@ -41,23 +41,26 @@ public class PreferenceActivityFragment extends PreferenceFragment implements Sh
         final PreferenceScreen screen = this.getPreferenceScreen();
         if ((screen != null) && (screen.getPreferenceCount() > 0)) {
             for (int i = 0; i < screen.getPreferenceCount(); i++) {
-                final Preference pref = screen.getPreference(i);
-                if (pref != null) {
-                    if (pref instanceof EditTextPreference) {
-                        try {
-                            final String val = ((EditTextPreference) pref).getText();
-                            if (val != null)
-                                pref.setSummary(val);
-                        } catch (Exception e) {
-                        }
-                    } else if (pref instanceof ListPreference) {
-                        try {
-                            final String val = ((ListPreference) pref).getEntry().toString();
-                            if (val != null)
-                                pref.setSummary(val);
-                        } catch (Exception e) {
+                try {
+                    final Preference pref = screen.getPreference(i);
+                    if (pref != null) {
+                        if (pref instanceof EditTextPreference) {
+                            try {
+                                final String val = ((EditTextPreference) pref).getText();
+                                if (val != null)
+                                    pref.setSummary(val);
+                            } catch (Exception e) {
+                            }
+                        } else if (pref instanceof ListPreference) {
+                            try {
+                                final String val = ((ListPreference) pref).getEntry().toString();
+                                if (val != null)
+                                    pref.setSummary(val);
+                            } catch (Exception e) {
+                            }
                         }
                     }
+                } catch (Exception e) {
                 }
             }
         }

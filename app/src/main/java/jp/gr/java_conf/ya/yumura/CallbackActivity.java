@@ -26,7 +26,7 @@ public class CallbackActivity extends Activity {
                 final String verifier = uri.getQueryParameter(TwitterAccess.CALLBACK_URL_VERIFIER);
                 final String[] savedConsumerKeyAndSecret = KeyManage.loadCurrentConsumerKeyAndSecret();
                 if (pref_debug_write_logcat)
-                    Log.v("Yumura", "loadCurrentConsumerKeyAndSecret: " + savedConsumerKeyAndSecret[0] + " , " + savedConsumerKeyAndSecret[1]);
+                    Log.i("Yumura", "loadCurrentConsumerKeyAndSecret: " + savedConsumerKeyAndSecret[0] + " , " + savedConsumerKeyAndSecret[1]);
 
                 new Thread(new Runnable() {
                     @Override
@@ -41,7 +41,7 @@ public class CallbackActivity extends Activity {
                             final Intent i = new Intent(getApplicationContext(), TlActivity.class);
                             startActivity(i);
                         } catch (Exception e) {
-                            if (pref_debug_write_logcat) Log.v("Yumura", e.getMessage());
+                            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                         }
                         // }
                         // });

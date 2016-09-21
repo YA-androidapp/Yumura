@@ -26,13 +26,14 @@
             android:title="@string/pref_tl_reverse_direction" />
 
         <ListPreference
-            android:defaultValue="-1"
+            android:defaultValue="0"
             android:entries="@array/pref_tl_theme_list_titles"
             android:entryValues="@array/pref_tl_theme_list_values"
             android:key="pref_tl_theme_list"
             android:negativeButtonText="@string/action_cancel"
             android:positiveButtonText="@string/action_ok"
             android:title="@string/pref_tl_theme_list" />
+
         <PreferenceScreen android:title="@string/title_tl_mute">
             <PreferenceCategory android:title="@string/title_tl_mute">
                 <EditTextPreference
@@ -54,6 +55,13 @@
                     android:title="@string/pref_icon_mute_screenname" />
             </PreferenceCategory>
         </PreferenceScreen>
+
+        <EditTextPreference
+            android:key="pref_tl_move_to_unread_mute_source"
+            android:selectAllOnFocus="false"
+            android:summary="@string/pref_tl_move_to_unread_mute_source_summary"
+            android:title="@string/pref_tl_move_to_unread_mute_source" />
+
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/title_activity_vieweractivity">
         <SwitchPreference

@@ -301,7 +301,7 @@ public class TweetMenu {
                                     TwitterAccess twitterAccess = new TwitterAccess(null);
                                     twitterAccess.destroyStatus(menuItemArray[which], status);
                                 } catch (Exception e) {
-                                    if (pref_debug_write_logcat) Log.v("Yumura", e.getMessage());
+                                    if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                                 }
                             }
                         }).start();

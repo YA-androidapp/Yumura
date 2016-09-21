@@ -3,10 +3,12 @@ package jp.gr.java_conf.ya.yumura; // Copyright (c) 2013-2016 YA <ya.androidapp@
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -17,6 +19,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,10 +34,11 @@ import jp.gr.java_conf.ya.yumura.Setting.PreferenceManage;
 import jp.gr.java_conf.ya.yumura.String.ViewString;
 import jp.gr.java_conf.ya.yumura.Twitter.BinarySearchUtil;
 import jp.gr.java_conf.ya.yumura.Twitter.TweetMenu;
+import jp.gr.java_conf.ya.yumura.Twitter.TwitterAccess;
 import twitter4j.Status;
 
 public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
-    private boolean pref_debug_write_logcat = true;
+    private boolean pref_debug_write_logcat = false;
     private boolean pref_tl_reverse_direction = false;
 
     private Context context;
@@ -51,9 +55,12 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
 
     private SortedList<Status> mDataList;
 
-    private String pref_icon_mute_screenname;
-    private String pref_tl_mute_screenname;
-    private String pref_tl_mute_text;
+    private String pref_tl_theme_list = "web";
+    private int pref_tl_theme_color_background = Color.TRANSPARENT;
+    private int pref_tl_theme_color_font = Color.TRANSPARENT;
+    private String pref_icon_mute_screenname = "";
+    private String pref_tl_mute_screenname = "";
+    private String pref_tl_mute_text = "";
 
     private String[] muteTextArray;
 
@@ -79,7 +86,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     }
 
     public void addDataOf(final List<Status> dataList) {
-        if (pref_debug_write_logcat) Log.v("Yumura", "addDataOf()");
+        if (pref_debug_write_logcat) Log.i("Yumura", "addDataOf()");
         if (dataList != null) {
             ((Activity) context).runOnUiThread(new Runnable() {
                 @Override
@@ -108,7 +115,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     }
 
     public void addDataOf(final Status data) {
-        if (pref_debug_write_logcat) Log.v("Yumura", "addDataOf()");
+        if (pref_debug_write_logcat) Log.i("Yumura", "addDataOf()");
         if (data != null) {
             ((Activity) context).runOnUiThread(new Runnable() {
                 @Override
@@ -183,19 +190,19 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     public final void moveToUnread() {
         long lastReadTweet = PreferenceManage.getLong(context, PreferenceManage.Last_Read_Tweet, 0);
         if (pref_debug_write_logcat)
-            Log.v("Yumura", "lastReadTweet: " + Long.toString(lastReadTweet));
+            Log.i("Yumura", "lastReadTweet: " + Long.toString(lastReadTweet));
 
         if (lastReadTweet > 0) {
-            if (pref_debug_write_logcat) Log.v("Yumura", "id[0]: " + getItemId(0));
+            if (pref_debug_write_logcat) Log.i("Yumura", "id[0]: " + getItemId(0));
             if (pref_debug_write_logcat)
-                Log.v("Yumura", "id[adapter.getItemCount()-1]: " + getItemId(getItemCount() - 1));
+                Log.i("Yumura", "id[adapter.getItemCount()-1]: " + getItemId(getItemCount() - 1));
 
             try {
                 if ((getItemId(0) >= lastReadTweet) && (getItemId(getItemCount() - 1) <= lastReadTweet)) {
                     int position = BinarySearchUtil.binary_search_id(lastReadTweet, getList());
                     scrollTo(position);
                     if (pref_debug_write_logcat)
-                        Log.v("Yumura", "Last_Read_Tweet getLong " + Long.toString(getItemId(position)) + " " + position);
+                        Log.i("Yumura", "Last_Read_Tweet getLong " + Long.toString(getItemId(position)) + " " + position);
                 } else {
                     scrollTo(getItemCount() - 1);
                 }
@@ -247,6 +254,12 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
 
             onBindViewHolderIcon(holder, status);
         }
+
+        if (pref_tl_theme_color_background != Color.TRANSPARENT)
+            holder.itemView.setBackgroundColor(pref_tl_theme_color_background);
+
+        if (pref_tl_theme_color_font != Color.TRANSPARENT)
+            holder.statusText.setTextColor(pref_tl_theme_color_font);
     }
 
     private boolean checkIconMute(Status status) {
@@ -297,7 +310,8 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
             ((Activity) context).runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    recyclerView.smoothScrollToPosition(pos);
+                    if ((0 <= pos) && (pos < getItemCount()))
+                        recyclerView.smoothScrollToPosition(pos);
                 }
             });
         } catch (Exception e) {
@@ -334,18 +348,45 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     }
 
     private void getPreferences() {
-        pref_debug_write_logcat = PreferenceManage.getBoolean(context, "pref_debug_write_logcat", false);
+        pref_debug_write_logcat = PreferenceManage.getBoolean(context, "pref_debug_write_logcat", pref_debug_write_logcat);
         pref_tl_iconsize_default = (int) (context.getResources().getDisplayMetrics().density *
                 PreferenceManage.getInt(context, "pref_tl_iconsize_default",
                         (int) (context.getResources().getDisplayMetrics().density * pref_tl_iconsize_default)));
-        pref_icon_mute_screenname = "," + PreferenceManage.getString(context, "pref_icon_mute_screenname", "") + ",";
-        pref_tl_mute_screenname = "," + PreferenceManage.getString(context, "pref_tl_mute_screenname", "") + ",";
-        pref_tl_mute_text = PreferenceManage.getString(context, "pref_tl_mute_text", "");
+        pref_icon_mute_screenname = "," + PreferenceManage.getString(context, "pref_icon_mute_screenname", pref_icon_mute_screenname) + ",";
+        pref_tl_mute_screenname = "," + PreferenceManage.getString(context, "pref_tl_mute_screenname", pref_tl_mute_screenname) + ",";
+        pref_tl_mute_text = PreferenceManage.getString(context, "pref_tl_mute_text", pref_tl_mute_text);
         pref_tl_reverse_direction = PreferenceManage.getBoolean(context, "pref_tl_textsize_default", pref_tl_reverse_direction);
         pref_tl_textsize_default = PreferenceManage.getFloat(context, "pref_tl_textsize_default", pref_tl_textsize_default);
 
-        if (!pref_tl_mute_text.equals(""))
+        if ((pref_tl_mute_text != null) && (!pref_tl_mute_text.equals("")))
             muteTextArray = pref_tl_mute_text.split(",");
+
+
+        new Thread(new Runnable() {
+            @Override
+            public final void run() {
+                pref_tl_theme_list = PreferenceManage.getString(context, "pref_tl_theme_list", pref_tl_theme_list);
+
+                if ((pref_tl_theme_list != null) && (!pref_tl_theme_list.equals(""))) {
+                    if (pref_tl_theme_list.equals("2")) {
+                        pref_tl_theme_color_background = ContextCompat.getColor(context, android.R.color.background_dark);
+                        pref_tl_theme_color_font = ContextCompat.getColor(context, android.R.color.secondary_text_dark);
+                    } else if (pref_tl_theme_list.equals("1")) {
+                        pref_tl_theme_color_background = ContextCompat.getColor(context, android.R.color.background_light);
+                        pref_tl_theme_color_font = ContextCompat.getColor(context, android.R.color.secondary_text_light);
+                    } else if (pref_tl_theme_list.equals("0")) {
+                        final String[] colors = TwitterAccess.getColors();
+                        pref_tl_theme_color_background = Color.parseColor(colors[0]);
+                        pref_tl_theme_color_font = Color.parseColor(colors[1]);
+                    }
+                }
+                if (pref_debug_write_logcat) {
+                    Log.i("Yumura", "pref_tl_theme_list: " + pref_tl_theme_list);
+                    Log.i("Yumura", "pref_tl_theme_color_background: " + pref_tl_theme_color_background);
+                    Log.i("Yumura", "pref_tl_theme_color_font: " + pref_tl_theme_color_font);
+                }
+            }
+        }).start();
     }
 
     private void onBindViewHolderIcon(ViewHolder holder, final Status status) {
@@ -387,14 +428,14 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     }
 
     private void saveLastReadTweet(final Status status, final int position) {
-        if (pref_debug_write_logcat) Log.v("Yumura",
+        if (pref_debug_write_logcat) Log.i("Yumura",
                 "saveLastReadTweet(" + Long.toString(status.getId()) + ", " + Integer.toString(position) + ")");
         long lastReadTweet = PreferenceManage.getLong(context, PreferenceManage.Last_Read_Tweet, 0);
         if (lastReadTweet < status.getId()) {
             PreferenceManage.putLong(context, PreferenceManage.Last_Read_Tweet, status.getId());
             scrollTo(position);
             if (pref_debug_write_logcat)
-                Log.v("Yumura", "Last_Read_Tweet putLong " + Long.toString(status.getId()) + " " + position);
+                Log.i("Yumura", "Last_Read_Tweet putLong " + Long.toString(status.getId()) + " " + position);
         }
     }
 

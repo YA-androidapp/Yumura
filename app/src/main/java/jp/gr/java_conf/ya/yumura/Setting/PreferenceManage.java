@@ -12,11 +12,19 @@ public class PreferenceManage {
     public static boolean getBoolean(final Context context, final String key, final boolean defaultValue) {
         try {
             final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-            final boolean flo = preferences.getBoolean(key, defaultValue);
+            final String str = preferences.getString(key, Boolean.toString(defaultValue));
+            final boolean bool = (str.equals("true")) ? true : false; // Boolean.parseBoolean(str);
 
-            return flo;
+            return bool;
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat)
+                Log.e("Yumura", e.getMessage());
+
+            try {
+                final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+                return preferences.getBoolean(key, defaultValue);
+            } catch (Exception ex) {
+            }
         }
 
         return false;
@@ -30,7 +38,14 @@ public class PreferenceManage {
 
             return flo;
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat)
+                Log.e("Yumura", e.getMessage());
+
+            try {
+                final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+                return preferences.getFloat(key, defaultValue);
+            } catch (Exception ex) {
+            }
         }
 
         return 0f;
@@ -44,7 +59,14 @@ public class PreferenceManage {
 
             return inte;
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat)
+                Log.e("Yumura", e.getMessage());
+
+            try {
+                final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+                return preferences.getInt(key, defaultValue);
+            } catch (Exception ex) {
+            }
         }
 
         return 0;
@@ -58,7 +80,14 @@ public class PreferenceManage {
 
             return lon;
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat)
+                Log.e("Yumura", e.getMessage());
+
+            try {
+                final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+                return preferences.getLong(key, defaultValue);
+            } catch (Exception ex) {
+            }
         }
 
         return 0;
@@ -71,10 +100,25 @@ public class PreferenceManage {
 
             return str;
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat)
+                Log.e("Yumura", e.getMessage());
         }
 
         return "";
+    }
+
+    public static boolean putBoolean(final Context context, final String key, final boolean value) {
+        try {
+            final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+            final SharedPreferences.Editor editor = preferences.edit();
+            editor.putString(key, value ? "true" : "false"); // Boolean.toString(value));
+            return editor.commit();
+        } catch (Exception e) {
+            if (pref_debug_write_logcat)
+                Log.e("Yumura", e.getMessage());
+        }
+
+        return false;
     }
 
     public static boolean putLong(final Context context, final String key, final long value) {
@@ -84,7 +128,8 @@ public class PreferenceManage {
             editor.putString(key, Long.toString(value));
             return editor.commit();
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat)
+                Log.e("Yumura", e.getMessage());
         }
 
         return false;
@@ -97,7 +142,8 @@ public class PreferenceManage {
             editor.putString(key, defaultValue);
             return editor.commit();
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat)
+                Log.e("Yumura", e.getMessage());
         }
 
         return false;
