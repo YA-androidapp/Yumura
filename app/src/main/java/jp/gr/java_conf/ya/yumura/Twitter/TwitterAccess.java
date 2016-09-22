@@ -8,6 +8,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import jp.gr.java_conf.ya.yumura.App;
@@ -81,85 +82,90 @@ public class TwitterAccess {
                 adapter.removeDataOf(destroyedStatuss);
                 adapter.notifyDataSetChanged();
                 adapter.showSnackbar("Removed", ViewString.getScreennameAndText(destroyedStatus));
-                adapter.notifyDataSetChanged();
+            }
+        }
+
+        private void addDataOfAndNotify(final ResponseList<Status> statuses) {
+            if (adapter != null) {
+                ((Activity) adapter.getContext()).runOnUiThread(new Runnable() {
+                    @Override
+                    public final void run() {
+                        adapter.addDataOf(statuses);
+                        adapter.notifyDataSetChanged();
+                        adapter.moveToStartPositionOfReading();
+                        adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets ; " + getCommunicationVolumeOfThisApp() + " B");
+                    }
+                });
             }
         }
 
         @Override
         public void gotHomeTimeline(final ResponseList<Status> statuses) {
             if (pref_debug_write_logcat) Log.i("Yumura", "gotHomeTimeline()");
-            if (adapter != null) {
-                adapter.addDataOf(statuses);
-                adapter.notifyDataSetChanged();
-                adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets ; " + getCommunicationVolumeOfThisApp() + " B");
-                adapter.notifyDataSetChanged();
-            }
+            addDataOfAndNotify(statuses);
         }
 
         @Override
         public void gotMentions(final ResponseList<Status> statuses) {
             if (pref_debug_write_logcat) Log.i("Yumura", "gotMentions()");
-            if (adapter != null) {
-                adapter.addDataOf(statuses);
-                adapter.notifyDataSetChanged();
-                adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets ; " + getCommunicationVolumeOfThisApp() + " B");
-                adapter.notifyDataSetChanged();
-            }
+            addDataOfAndNotify(statuses);
         }
 
         @Override
         public void gotUserListStatuses(final ResponseList<Status> statuses) {
             if (pref_debug_write_logcat) Log.i("Yumura", "gotUserListStatuses()");
-            if (adapter != null) {
-                adapter.addDataOf(statuses);
-                adapter.notifyDataSetChanged();
-                adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets ; " + getCommunicationVolumeOfThisApp() + " B");
-                adapter.notifyDataSetChanged();
-            }
+            addDataOfAndNotify(statuses);
         }
 
         @Override
         public void gotUserTimeline(final ResponseList<Status> statuses) {
             if (pref_debug_write_logcat) Log.i("Yumura", "gotUserTimeline()");
-            if (adapter != null) {
-                adapter.addDataOf(statuses);
-                adapter.notifyDataSetChanged();
-                adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets ; " + getCommunicationVolumeOfThisApp() + " B");
-                adapter.notifyDataSetChanged();
-            }
+            addDataOfAndNotify(statuses);
         }
 
         @Override
-        public void retweetedStatus(Status retweetedStatus) {
-            if (adapter != null) {
-                adapter.showSnackbar("Retweeted", ViewString.getScreennameAndText(retweetedStatus));
-                adapter.notifyDataSetChanged();
-            }
+        public void retweetedStatus(final Status retweetedStatus) {
+            if (pref_debug_write_logcat) Log.i("Yumura", "retweetedStatus()");
+            ((Activity) adapter.getContext()).runOnUiThread(new Runnable() {
+                @Override
+                public final void run() {
+                    if (adapter != null) {
+                        adapter.showSnackbar("Retweeted", ViewString.getScreennameAndText(retweetedStatus));
+                        adapter.notifyDataSetChanged();
+                    }
+                }
+            });
         }
 
         @Override
         public void searched(final QueryResult queryResult) {
             if (pref_debug_write_logcat) Log.i("Yumura", "searched()");
-            if (adapter != null) {
-                adapter.addDataOf(queryResult.getTweets());
-                adapter.notifyDataSetChanged();
-                adapter.moveToUnread();
-                adapter.showSnackbar("Loaded", Integer.toString(queryResult.getTweets().size()) + " tweets ; " + getCommunicationVolumeOfThisApp() + " B");
-                adapter.notifyDataSetChanged();
-            }
+            ((Activity) adapter.getContext()).runOnUiThread(new Runnable() {
+                @Override
+                public final void run() {
+                    if (adapter != null) {
+                        adapter.addDataOf(queryResult.getTweets());
+                        adapter.notifyDataSetChanged();
+                        adapter.moveToStartPositionOfReading();
+                        adapter.showSnackbar("Loaded", Integer.toString(queryResult.getTweets().size()) + " tweets ; " + getCommunicationVolumeOfThisApp() + " B");
+                        adapter.notifyDataSetChanged();
+                    }
+                }
+            });
         }
 
         @Override
         public void updatedStatus(final Status status) {
-            if (adapter != null) {
-                adapter.showSnackbar("Updated", ViewString.getScreennameAndText(status));
-                adapter.addDataOf(status);
-                adapter.notifyDataSetChanged();
-            }
+            ((Activity) adapter.getContext()).runOnUiThread(new Runnable() {
+                @Override
+                public final void run() {
+                    if (adapter != null) {
+                        adapter.showSnackbar("Updated", ViewString.getScreennameAndText(status));
+                        adapter.addDataOf(status);
+                        adapter.notifyDataSetChanged();
+                    }
+                }
+            });
         }
     };
 
@@ -189,7 +195,8 @@ public class TwitterAccess {
                 return asyncTwitter;
             }
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat)
+                Log.e("Yumura", "getAsyncTwitter(String) E: " + e.getMessage());
         }
 
         final AsyncTwitter asyncTwitter = new AsyncTwitterFactory(getConfiguration(CONSUMER_KEY, CONSUMER_SECRET)).getInstance();
@@ -204,7 +211,7 @@ public class TwitterAccess {
             return new String[]{"#" + user.getProfileBackgroundColor(),
                     "#" + user.getProfileTextColor()};
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat) Log.e("Yumura", "getColors() E: " + e.getMessage());
         }
 
         return new String[]{"#ffffff", "#000000"};
@@ -231,7 +238,8 @@ public class TwitterAccess {
                 if (status != null)
                     return status;
             } catch (Exception e) {
-                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                if (pref_debug_write_logcat)
+                    Log.e("Yumura", "getStatusJustBefore() E: " + e.getMessage());
             }
         }
 
@@ -265,7 +273,7 @@ public class TwitterAccess {
                 return twitter;
             }
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat) Log.e("Yumura", "getTwitter(String) E: " + e.getMessage());
         }
 
         return (new TwitterFactory(getConfiguration(CONSUMER_KEY, CONSUMER_SECRET))).getSingleton();
@@ -276,7 +284,7 @@ public class TwitterAccess {
             try {
                 return getTwitter().showStatus(id);
             } catch (Exception e) {
-                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                if (pref_debug_write_logcat) Log.e("Yumura", "showStatus() E: " + e.getMessage());
             }
         }
 
@@ -296,7 +304,7 @@ public class TwitterAccess {
         try {
             lists = twitter.getUserLists(screenName);
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat) Log.e("Yumura", "getUserListUrls() E: " + e.getMessage());
         }
         if (lists.size() > 0) {
             for (UserList list : lists) {
@@ -311,21 +319,30 @@ public class TwitterAccess {
 
     private static String getCommunicationVolumeOfThisApp() {
         try {
-            if (pref_debug_write_logcat) Log.i("Yumura", "getCommunicationVolumeOfThisApp()");
-            final long[] currentCommunicationVolume = CommunicationVolume.getCommunicationVolumeOfThisApp();
-            final long uidTxBytes = currentCommunicationVolume[0] - preCommunicationVolume[0];
-            final long uidRxBytes = currentCommunicationVolume[1] - preCommunicationVolume[1];
-            preCommunicationVolume = currentCommunicationVolume;
-
-            final long uidBytes = uidTxBytes + uidRxBytes;
-
             if (pref_debug_write_logcat)
-                Log.i("Yumura", "getCommunicationVolumeOfThisApp() " + Long.toString(uidBytes));
+                Log.i("Yumura", "String getCommunicationVolumeArrayOfThisApp()");
+            final long[] currentCommunicationVolume = CommunicationVolume.getCommunicationVolumeArrayOfThisApp();
+            if ((currentCommunicationVolume[0] > -1) && (currentCommunicationVolume[1] > -1)) {
+                final long uidTxBytes = currentCommunicationVolume[0] - preCommunicationVolume[0];
+                final long uidRxBytes = currentCommunicationVolume[1] - preCommunicationVolume[1];
+                preCommunicationVolume = currentCommunicationVolume;
 
-            return Long.toString(uidBytes);
+                if (pref_debug_write_logcat) {
+                    Log.i("Yumura", "getCommunicationVolumeArrayOfThisApp() uidRxBytes:" + String.format(Locale.JAPAN, "%,d", uidRxBytes));
+                    Log.i("Yumura", "getCommunicationVolumeArrayOfThisApp() uidTxBytes:" + String.format(Locale.JAPAN, "%,d", uidTxBytes));
+                }
+
+                final long uidBytes = uidTxBytes + uidRxBytes;
+
+                final String uidByteString = String.format(Locale.JAPAN, "%,d", uidBytes);
+                if (pref_debug_write_logcat)
+                    Log.i("Yumura", "getCommunicationVolumeArrayOfThisApp() " + uidByteString);
+                return uidByteString;
+            }
         } catch (Exception e) {
-            return "";
         }
+
+        return "";
     }
 
     public void createFavorite(final String screenName, final Status status) {
@@ -333,7 +350,8 @@ public class TwitterAccess {
             try {
                 getAsyncTwitter(screenName).createFavorite(status.getId());
             } catch (Exception e) {
-                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                if (pref_debug_write_logcat)
+                    Log.e("Yumura", "createFavorite() E: " + e.getMessage());
             }
         }
     }
@@ -343,7 +361,8 @@ public class TwitterAccess {
             try {
                 getAsyncTwitter(screenName).destroyFavorite(status.getId());
             } catch (Exception e) {
-                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                if (pref_debug_write_logcat)
+                    Log.e("Yumura", "destroyFavorite() E: " + e.getMessage());
             }
         }
     }
@@ -353,7 +372,8 @@ public class TwitterAccess {
             try {
                 getAsyncTwitter(screenName).destroyStatus(status.getId());
             } catch (Exception e) {
-                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                if (pref_debug_write_logcat)
+                    Log.e("Yumura", "destroyStatus() E: " + e.getMessage());
             }
         }
     }
@@ -391,7 +411,8 @@ public class TwitterAccess {
         try {
             cachedId = cacheIdSn.get(screenName);
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat)
+                Log.e("Yumura", "getIdFromScreenName() E: " + e.getMessage());
         }
         if (cachedId > -1) {
             // キャッシュにある場合
@@ -424,8 +445,9 @@ public class TwitterAccess {
         long cachedListId = -1L;
         try {
             cachedListId = cacheIdSnSlug.get(keys);
-        } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+        } catch (Exception e1) {
+            if (pref_debug_write_logcat)
+                Log.e("Yumura", "getListIdFromSlug() E1: " + e1.getMessage());
         }
         if (cachedListId > -1) {
             // キャッシュにある場合
@@ -437,8 +459,9 @@ public class TwitterAccess {
             ResponseList<UserList> lists = null;
             try {
                 lists = twitter.getUserLists(screenName);
-            } catch (Exception e) {
-                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            } catch (Exception e2) {
+                if (pref_debug_write_logcat)
+                    Log.e("Yumura", "getListIdFlomSlug() E2: " + e2.getMessage());
             }
             if ((lists != null) && (lists.size() > 0)) {
                 for (UserList list : lists) {
@@ -447,13 +470,15 @@ public class TwitterAccess {
                                 || (list.getName().toLowerCase().equals(slug.toLowerCase()))) {
                             try {
                                 cacheIdSnSlug.put(keys, list.getId());
-                            } catch (Exception e) {
-                                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                            } catch (Exception e3) {
+                                if (pref_debug_write_logcat)
+                                    Log.e("Yumura", "getListIdFromSlug() E3: " + e3.getMessage());
                             }
                             try {
                                 return list.getId();
-                            } catch (Exception e) {
-                                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                            } catch (Exception e4) {
+                                if (pref_debug_write_logcat)
+                                    Log.e("Yumura", "getListIdFromSlug() E4: " + e4.getMessage());
                             }
                         }
                     }
@@ -516,7 +541,7 @@ public class TwitterAccess {
 
     public String[] loadTimeline(final String url, final int count, final long maxId, final int page, final long sinceId) {
 
-        preCommunicationVolume = CommunicationVolume.getCommunicationVolumeOfThisApp();
+        preCommunicationVolume = CommunicationVolume.getCommunicationVolumeArrayOfThisApp();
 
         List<String> result = new ArrayList<>();
 
@@ -618,7 +643,8 @@ public class TwitterAccess {
                         if (adapter.getContext() != null)
                             ((Activity) adapter.getContext()).startActivityForResult(i, 0);
                 } catch (Exception e) {
-                    if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                    if (pref_debug_write_logcat)
+                        Log.e("Yumura", "loadTimeline() E: " + e.getMessage());
                 }
             }
         }
@@ -631,7 +657,7 @@ public class TwitterAccess {
             try {
                 getAsyncTwitter(screenName).updateStatus(status.getText());
             } catch (Exception e) {
-                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                if (pref_debug_write_logcat) Log.e("Yumura", "pak() E: " + e.getMessage());
             }
         }
     }
@@ -641,7 +667,7 @@ public class TwitterAccess {
             try {
                 getAsyncTwitter(screenName).retweetStatus(status.getId());
             } catch (Exception e) {
-                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                if (pref_debug_write_logcat) Log.e("Yumura", "retweet() E: " + e.getMessage());
             }
         }
     }
@@ -668,7 +694,8 @@ public class TwitterAccess {
             try {
                 getAsyncTwitter(screenName).updateStatus(statusText);
             } catch (Exception e) {
-                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                if (pref_debug_write_logcat)
+                    Log.e("Yumura", "updateStatus(String, String) E: " + e.getMessage());
             }
         }
     }
@@ -678,7 +705,8 @@ public class TwitterAccess {
             try {
                 getAsyncTwitter(screenName).updateStatus(statusUpdate);
             } catch (Exception e) {
-                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                if (pref_debug_write_logcat)
+                    Log.e("Yumura", "updateStatus(String, StatusUpdate) E: " + e.getMessage());
             }
         }
     }
@@ -688,7 +716,7 @@ public class TwitterAccess {
             try {
                 getAsyncTwitter(screenName).updateStatus("RT " + ViewString.getScreennameAndText(status));
             } catch (Exception e) {
-                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                if (pref_debug_write_logcat) Log.e("Yumura", "userRetweet() E: " + e.getMessage());
             }
         }
     }

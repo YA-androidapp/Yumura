@@ -10,7 +10,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.util.SortedList;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
@@ -19,7 +18,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,8 +31,10 @@ import jp.gr.java_conf.ya.yumura.Network.ImgGetter;
 import jp.gr.java_conf.ya.yumura.Setting.PreferenceManage;
 import jp.gr.java_conf.ya.yumura.String.ViewString;
 import jp.gr.java_conf.ya.yumura.Twitter.BinarySearchUtil;
+import jp.gr.java_conf.ya.yumura.Twitter.KeyManage;
 import jp.gr.java_conf.ya.yumura.Twitter.TweetMenu;
 import jp.gr.java_conf.ya.yumura.Twitter.TwitterAccess;
+import twitter4j.ResponseList;
 import twitter4j.Status;
 
 public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
@@ -59,6 +59,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     private int pref_tl_theme_color_background = Color.TRANSPARENT;
     private int pref_tl_theme_color_font = Color.TRANSPARENT;
     private String pref_icon_mute_screenname = "";
+    private String pref_tl_move_to_unread_mute_source = "";
     private String pref_tl_mute_screenname = "";
     private String pref_tl_mute_text = "";
 
@@ -88,58 +89,32 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     public void addDataOf(final List<Status> dataList) {
         if (pref_debug_write_logcat) Log.i("Yumura", "addDataOf()");
         if (dataList != null) {
-            ((Activity) context).runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
+            try {
+                ((Activity)context).runOnUiThread(new Runnable() {
+                    @Override
+                    public final void run() {
                         mDataList.addAll(dataList);
-                        notifyDataSetChanged();
-                    } catch (Exception e) {
-                        if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                     }
-
-                    if (recyclerView != null) {
-                        if (pref_tl_reverse_direction) {
-                            // true: From bottom to top
-                            try {
-                                final int firstVisiblePosition = ((LinearLayoutManager) (recyclerView.getLayoutManager())).findFirstVisibleItemPosition();
-                                scrollTo(firstVisiblePosition + dataList.size());
-                            } catch (Exception e) {
-                                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
-                            }
-                        }
-                    }
-                }
-            });
+                });
+            } catch (Exception e) {
+                if (pref_debug_write_logcat) Log.e("Yumura", "addDataof(List<Status>) E: " + e.getMessage());
+            }
         }
     }
 
     public void addDataOf(final Status data) {
         if (pref_debug_write_logcat) Log.i("Yumura", "addDataOf()");
         if (data != null) {
-            ((Activity) context).runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
+            try {
+                ((Activity)context).runOnUiThread(new Runnable() {
+                    @Override
+                    public final void run() {
                         mDataList.add(data);
-                        notifyDataSetChanged();
-                    } catch (Exception e) {
-                        if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                     }
-
-                    if (recyclerView != null) {
-                        if (pref_tl_reverse_direction) {
-                            // true: From bottom to top
-                            try {
-                                final int firstVisiblePosition = ((LinearLayoutManager) (recyclerView.getLayoutManager())).findFirstVisibleItemPosition();
-                                scrollTo(firstVisiblePosition);
-                            } catch (Exception e) {
-                                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
-                            }
-                        }
-                    }
-                }
-            });
+                });
+            } catch (Exception e) {
+                if (pref_debug_write_logcat) Log.e("Yumura", "addDataOf(Status) E: " + e.getMessage());
+            }
         }
     }
 
@@ -147,7 +122,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
         try {
             mDataList.clear();
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat) Log.e("Yumura", "clearData() E: " + e.getMessage());
         }
     }
 
@@ -168,7 +143,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
             try {
                 return mDataList.get(position).getId();
             } catch (Exception e) {
-                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+                if (pref_debug_write_logcat) Log.e("Yumura", "getItemId() E: " + e.getMessage());
             }
         }
 
@@ -187,28 +162,57 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
         return mDataList.indexOf(status);
     }
 
+    public final void moveToStartPositionOfReading() {
+        if (pref_tl_reverse_direction) {
+            // true: From bottom to top
+            scrollTo(getItemCount() - 2);
+        }
+    }
+
     public final void moveToUnread() {
-        long lastReadTweet = PreferenceManage.getLong(context, PreferenceManage.Last_Read_Tweet, 0);
-        if (pref_debug_write_logcat)
-            Log.i("Yumura", "lastReadTweet: " + Long.toString(lastReadTweet));
-
-        if (lastReadTweet > 0) {
-            if (pref_debug_write_logcat) Log.i("Yumura", "id[0]: " + getItemId(0));
-            if (pref_debug_write_logcat)
-                Log.i("Yumura", "id[adapter.getItemCount()-1]: " + getItemId(getItemCount() - 1));
-
+        if (pref_debug_write_logcat) {
             try {
-                if ((getItemId(0) >= lastReadTweet) && (getItemId(getItemCount() - 1) <= lastReadTweet)) {
-                    int position = BinarySearchUtil.binary_search_id(lastReadTweet, getList());
-                    scrollTo(position);
-                    if (pref_debug_write_logcat)
-                        Log.i("Yumura", "Last_Read_Tweet getLong " + Long.toString(getItemId(position)) + " " + position);
-                } else {
-                    scrollTo(getItemCount() - 1);
-                }
+                Log.i("Yumura", "id[0]: " + getItemId(0));
+                Log.i("Yumura", "id[getItemCount()-1]: " + getItemId(getItemCount() - 1));
             } catch (Exception e) {
-                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
             }
+        }
+        try {
+            long lastReadTweet = PreferenceManage.getLong(context, PreferenceManage.Last_Read_Tweet, 0);
+            if (pref_debug_write_logcat)
+                Log.i("Yumura", "lastReadTweet: " + Long.toString(lastReadTweet));
+            if ((lastReadTweet > 0) && (getItemId(0) >= lastReadTweet) && (getItemId(getItemCount() - 2) <= lastReadTweet)) {
+                final int position = BinarySearchUtil.binary_search_id(lastReadTweet, getList());
+                scrollTo(position);
+                return;
+            } else {
+                final Status status = TwitterAccess.getStatusJustBefore(KeyManage.getCurrentUser().screenName);
+                if ((status != null) && (("," + pref_tl_move_to_unread_mute_source + ",").indexOf("," + status.getSource() + ",") == -1)) {
+                    lastReadTweet = status.getId();
+                    if ((lastReadTweet > 0) && (getItemId(0) >= lastReadTweet) && (getItemId(getItemCount() - 2) <= lastReadTweet)) {
+                        final int position = BinarySearchUtil.binary_search_id(lastReadTweet, getList());
+                        scrollTo(position);
+                        return;
+                    }
+                } else {
+                    ResponseList<Status> responseList = TwitterAccess.getStatusesJustBefore(KeyManage.getCurrentUser().screenName);
+                    if (responseList != null) {
+                        for (Status s : responseList) {
+                            if ((s != null) && (("," + pref_tl_move_to_unread_mute_source + ",").indexOf("," + s.getSource() + ",") == -1)) {
+                                lastReadTweet = s.getId();
+                                if ((lastReadTweet > 0) && (getItemId(0) >= lastReadTweet) && (getItemId(getItemCount() - 2) <= lastReadTweet)) {
+                                    final int position = BinarySearchUtil.binary_search_id(lastReadTweet, getList());
+                                    scrollTo(position);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            moveToStartPositionOfReading();
+        } catch (Exception e) {
         }
     }
 
@@ -272,7 +276,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
                         return true;
             }
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat) Log.e("Yumura", "checkIconMute() E: " + e.getMessage());
         }
         return false;
     }
@@ -292,7 +296,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
                         return true;
             }
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat) Log.e("Yumura", "checkTlMute() E: " + e.getMessage());
         }
         return false;
     }
@@ -330,7 +334,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
                 }
             });
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat) Log.e("Yumura", "showSnackbar() E: " + e.getMessage());
         }
     }
 
@@ -343,7 +347,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
                 }
             });
         } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            if (pref_debug_write_logcat) Log.e("Yumura", "showToast() E: " + e.getMessage());
         }
     }
 
@@ -353,6 +357,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
                 PreferenceManage.getInt(context, "pref_tl_iconsize_default",
                         (int) (context.getResources().getDisplayMetrics().density * pref_tl_iconsize_default)));
         pref_icon_mute_screenname = "," + PreferenceManage.getString(context, "pref_icon_mute_screenname", pref_icon_mute_screenname) + ",";
+        pref_tl_move_to_unread_mute_source = PreferenceManage.getString(context, "pref_tl_move_to_unread_mute_source", pref_tl_move_to_unread_mute_source);
         pref_tl_mute_screenname = "," + PreferenceManage.getString(context, "pref_tl_mute_screenname", pref_tl_mute_screenname) + ",";
         pref_tl_mute_text = PreferenceManage.getString(context, "pref_tl_mute_text", pref_tl_mute_text);
         pref_tl_reverse_direction = PreferenceManage.getBoolean(context, "pref_tl_textsize_default", pref_tl_reverse_direction);
