@@ -130,8 +130,8 @@ public class TwitterAccess {
                 @Override
                 public final void run() {
                     if (adapter != null) {
-                        adapter.showSnackbar("Retweeted", ViewString.getScreennameAndText(retweetedStatus));
                         adapter.notifyDataSetChanged();
+                        adapter.showSnackbar("Retweeted", ViewString.getScreennameAndText(retweetedStatus));
                     }
                 }
             });
@@ -148,7 +148,6 @@ public class TwitterAccess {
                         adapter.notifyDataSetChanged();
                         adapter.moveToStartPositionOfReading();
                         adapter.showSnackbar("Loaded", Integer.toString(queryResult.getTweets().size()) + " tweets ; " + getCommunicationVolumeOfThisApp() + " B");
-                        adapter.notifyDataSetChanged();
                     }
                 }
             });

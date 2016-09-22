@@ -60,6 +60,7 @@
     <string name="pref_icon_mute_screenname">ユーザ名</string>
     <string name="pref_icon_mute_screenname_summary">カンマ区切り</string>
 
+    <string name="pref_tl_img_show">インライン画像を表示する</string>
     <string name="pref_tl_img_zoom">インライン画像表示倍率</string>
     <string name="pref_tl_img_zoom_value">1</string>
 

@@ -57,7 +57,7 @@ public class ViewString {
         }
     }
 
-    public static String getStatusText(final Status status) {
+    public static String getStatusText(final Status status, final boolean pref_tl_img_show) {
         final StringBuilder sb = new StringBuilder();
 
         try {
@@ -79,7 +79,7 @@ public class ViewString {
             }
 
             if (status != null) {
-                sb.append(getTextExpanded(status)).append("<br>");
+                sb.append(getTextExpanded(status, pref_tl_img_show)).append("<br>");
                 sb.append(getTweetFooter(status));
             }
 
@@ -90,10 +90,11 @@ public class ViewString {
         }
     }
 
-    public static String getTextExpanded(final Status status) {
+    public static String getTextExpanded(final Status status, final boolean pref_tl_img_show) {
         String text = status.getText();
 
         text = getTextExpandedTco(text, status);
+        if(pref_tl_img_show)
         text = getTextExpandedImg(text, status);
 
         return text;

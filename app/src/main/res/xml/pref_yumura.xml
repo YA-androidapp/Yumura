@@ -10,6 +10,12 @@
             android:singleLine="true"
             android:title="@string/pref_tl_api_count" />
 
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="pref_tl_img_show"
+            android:summary="@string/pref_tl_img_show"
+            android:title="@string/pref_tl_img_show" />
+
         <EditTextPreference
             android:defaultValue="@string/pref_tl_img_zoom_value"
             android:inputType="numberDecimal"
