@@ -8,7 +8,7 @@ public final class BinarySearchUtil {
     public static final int binary_search_time(final long needle, final SortedList<Status> tweets, int position) {
         int low = (position > -1) ? position : 0;
         int high = (tweets.size() > 1) ? (tweets.size() - 1) : 0;
-        int mid, preMid = -1;
+        int mid = (low + high) / 2, preMid = -1;
         while (low <= high) {
             mid = (low + high) / 2;
             if (mid == preMid) {
@@ -20,13 +20,13 @@ public final class BinarySearchUtil {
             }
             preMid = mid;
         }
-        return -1;
+        return mid;
     }
 
     public static final int binary_search_id(final long needle, final SortedList<Status> tweets) {
         int low = 0;
         int high = tweets.size() - 1;
-        int mid;
+        int mid = (low + high) / 2;
 
         while (low <= high) {
             mid = (low + high) / 2;
@@ -38,6 +38,6 @@ public final class BinarySearchUtil {
                 low = mid + 1;
             }
         }
-        return -1;
+        return mid;
     }
 }

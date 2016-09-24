@@ -20,8 +20,8 @@ public class ImgGetter implements Html.ImageGetter {
     View container;
     Context context;
 
-    private boolean pref_debug_write_logcat = true;
-    private float pref_tl_img_zoom = 3.0f;
+    private static boolean pref_debug_write_logcat = true;
+    private static float pref_tl_img_zoom = 3.0f;
 
     public ImgGetter(final View t, final Context c) {
         this.container = t;
@@ -92,5 +92,26 @@ public class ImgGetter implements Html.ImageGetter {
 
             return stream;
         }
+    }
+
+    public static Drawable fetchDrawable(final String urlString, final int width, final int height) {
+        try {
+            final InputStream is = fetch(urlString);
+            final Drawable drawable = Drawable.createFromStream(is, "src");
+            drawable.setBounds(0, 0, width, height);
+            drawable.setAlpha(50);
+            return drawable;
+        } catch (Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            return null;
+        }
+    }
+
+    private static InputStream fetch(String urlString) throws IOException {
+        final URL url = new URL(urlString);
+        final HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+        final InputStream stream = urlConnection.getInputStream();
+
+        return stream;
     }
 }

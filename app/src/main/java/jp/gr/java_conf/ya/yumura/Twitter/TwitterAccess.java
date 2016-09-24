@@ -2,6 +2,7 @@ package jp.gr.java_conf.ya.yumura.Twitter; // Copyright (c) 2013-2016 YA <ya.and
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.Log;
 
@@ -14,6 +15,7 @@ import java.util.Map;
 import jp.gr.java_conf.ya.yumura.App;
 import jp.gr.java_conf.ya.yumura.Cache.LruCacheMap;
 import jp.gr.java_conf.ya.yumura.Network.CommunicationVolume;
+import jp.gr.java_conf.ya.yumura.Network.ImgGetter;
 import jp.gr.java_conf.ya.yumura.Setting.PreferenceManage;
 import jp.gr.java_conf.ya.yumura.String.ViewString;
 import jp.gr.java_conf.ya.yumura.TlAdapter;
@@ -27,6 +29,7 @@ import twitter4j.Status;
 import twitter4j.StatusUpdate;
 import twitter4j.Twitter;
 import twitter4j.TwitterAdapter;
+import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.TwitterListener;
 import twitter4j.User;
@@ -59,29 +62,51 @@ public class TwitterAccess {
     private static final TwitterListener mListener = new TwitterAdapter() {
 
         @Override
-        public void createdFavorite(Status status) {
+        public void createdFavorite(final Status status) {
+            Log.i("Yumura", "createdFavorite()");
             if (adapter != null) {
-                adapter.showSnackbar("Favorited", ViewString.getScreennameAndText(status));
-                adapter.notifyDataSetChanged();
+                Log.i("Yumura", "createdFavorite() (adapter != null)");
+                final Drawable d = ImgGetter.fetchDrawable(status.getUser().getBiggerProfileImageURLHttps(), TlAdapter.snackbarIconWidth, TlAdapter.snackbarIconHeight);
+                Log.i("Yumura", "createdFavorite() d");
+                ((Activity) adapter.getContext()).runOnUiThread(new Runnable() {
+                    @Override
+                    public final void run() {
+                        Log.i("Yumura", "createdFavorite() run()");
+                        adapter.showSnackbar("Favorited", ViewString.getScreennameAndText(status), d);
+                        adapter.notifyDataSetChanged();
+                    }
+                });
             }
         }
 
         @Override
-        public void destroyedFavorite(Status status) {
+        public void destroyedFavorite(final Status status) {
             if (adapter != null) {
-                adapter.showSnackbar("Favorite Removed", ViewString.getScreennameAndText(status));
-                adapter.notifyDataSetChanged();
+                final Drawable d = ImgGetter.fetchDrawable(status.getUser().getBiggerProfileImageURLHttps(), TlAdapter.snackbarIconWidth, TlAdapter.snackbarIconHeight);
+                ((Activity) adapter.getContext()).runOnUiThread(new Runnable() {
+                    @Override
+                    public final void run() {
+                        adapter.showSnackbar("Favorite Removed", ViewString.getScreennameAndText(status), d);
+                        adapter.notifyDataSetChanged();
+                    }
+                });
             }
         }
 
         @Override
-        public void destroyedStatus(Status destroyedStatus) {
+        public void destroyedStatus(final Status destroyedStatus) {
             if (adapter != null) {
-                List<Status> destroyedStatuss = new ArrayList<>();
-                destroyedStatuss.add(destroyedStatus);
-                adapter.removeDataOf(destroyedStatuss);
-                adapter.notifyDataSetChanged();
-                adapter.showSnackbar("Removed", ViewString.getScreennameAndText(destroyedStatus));
+                final Drawable d = ImgGetter.fetchDrawable(destroyedStatus.getUser().getBiggerProfileImageURLHttps(), TlAdapter.snackbarIconWidth, TlAdapter.snackbarIconHeight);
+                ((Activity) adapter.getContext()).runOnUiThread(new Runnable() {
+                    @Override
+                    public final void run() {
+                        List<Status> destroyedStatuss = new ArrayList<>();
+                        destroyedStatuss.add(destroyedStatus);
+                        adapter.removeDataOf(destroyedStatuss);
+                        adapter.notifyDataSetChanged();
+                        adapter.showSnackbar("Removed", ViewString.getScreennameAndText(destroyedStatus), d);
+                    }
+                });
             }
         }
 
@@ -102,69 +127,99 @@ public class TwitterAccess {
         @Override
         public void gotHomeTimeline(final ResponseList<Status> statuses) {
             if (pref_debug_write_logcat) Log.i("Yumura", "gotHomeTimeline()");
-            addDataOfAndNotify(statuses);
+            if (adapter != null) {
+                ((Activity) adapter.getContext()).runOnUiThread(new Runnable() {
+                    @Override
+                    public final void run() {
+                        addDataOfAndNotify(statuses);
+                    }
+                });
+            }
         }
 
         @Override
         public void gotMentions(final ResponseList<Status> statuses) {
             if (pref_debug_write_logcat) Log.i("Yumura", "gotMentions()");
-            addDataOfAndNotify(statuses);
+            if (adapter != null) {
+                ((Activity) adapter.getContext()).runOnUiThread(new Runnable() {
+                    @Override
+                    public final void run() {
+                        addDataOfAndNotify(statuses);
+                    }
+                });
+            }
         }
 
         @Override
         public void gotUserListStatuses(final ResponseList<Status> statuses) {
             if (pref_debug_write_logcat) Log.i("Yumura", "gotUserListStatuses()");
-            addDataOfAndNotify(statuses);
+            if (adapter != null) {
+                ((Activity) adapter.getContext()).runOnUiThread(new Runnable() {
+                    @Override
+                    public final void run() {
+                        addDataOfAndNotify(statuses);
+                    }
+                });
+            }
         }
 
         @Override
         public void gotUserTimeline(final ResponseList<Status> statuses) {
             if (pref_debug_write_logcat) Log.i("Yumura", "gotUserTimeline()");
-            addDataOfAndNotify(statuses);
+            if (adapter != null) {
+                ((Activity) adapter.getContext()).runOnUiThread(new Runnable() {
+                    @Override
+                    public final void run() {
+                        addDataOfAndNotify(statuses);
+                    }
+                });
+            }
         }
 
         @Override
         public void retweetedStatus(final Status retweetedStatus) {
             if (pref_debug_write_logcat) Log.i("Yumura", "retweetedStatus()");
-            ((Activity) adapter.getContext()).runOnUiThread(new Runnable() {
-                @Override
-                public final void run() {
-                    if (adapter != null) {
+            if (adapter != null) {
+                final Drawable d = ImgGetter.fetchDrawable(retweetedStatus.getUser().getBiggerProfileImageURLHttps(), TlAdapter.snackbarIconWidth, TlAdapter.snackbarIconHeight);
+                ((Activity) adapter.getContext()).runOnUiThread(new Runnable() {
+                    @Override
+                    public final void run() {
                         adapter.notifyDataSetChanged();
-                        adapter.showSnackbar("Retweeted", ViewString.getScreennameAndText(retweetedStatus));
+                        adapter.showSnackbar("Retweeted", ViewString.getScreennameAndText(retweetedStatus), d);
                     }
-                }
-            });
+                });
+            }
         }
 
         @Override
         public void searched(final QueryResult queryResult) {
             if (pref_debug_write_logcat) Log.i("Yumura", "searched()");
-            ((Activity) adapter.getContext()).runOnUiThread(new Runnable() {
-                @Override
-                public final void run() {
-                    if (adapter != null) {
+            if (adapter != null) {
+                ((Activity) adapter.getContext()).runOnUiThread(new Runnable() {
+                    @Override
+                    public final void run() {
                         adapter.addDataOf(queryResult.getTweets());
                         adapter.notifyDataSetChanged();
                         adapter.moveToStartPositionOfReading();
                         adapter.showSnackbar("Loaded", Integer.toString(queryResult.getTweets().size()) + " tweets ; " + getCommunicationVolumeOfThisApp() + " B");
                     }
-                }
-            });
+                });
+            }
         }
 
         @Override
         public void updatedStatus(final Status status) {
-            ((Activity) adapter.getContext()).runOnUiThread(new Runnable() {
-                @Override
-                public final void run() {
-                    if (adapter != null) {
-                        adapter.showSnackbar("Updated", ViewString.getScreennameAndText(status));
+            if (adapter != null) {
+                final Drawable d = ImgGetter.fetchDrawable(status.getUser().getBiggerProfileImageURLHttps(), TlAdapter.snackbarIconWidth, TlAdapter.snackbarIconHeight);
+                ((Activity) adapter.getContext()).runOnUiThread(new Runnable() {
+                    @Override
+                    public final void run() {
+                        adapter.showSnackbar("Updated", ViewString.getScreennameAndText(status), d);
                         adapter.addDataOf(status);
                         adapter.notifyDataSetChanged();
                     }
-                }
-            });
+                });
+            }
         }
     };
 
@@ -229,34 +284,45 @@ public class TwitterAccess {
     }
 
     public static Status getStatusJustBefore(final String screenName) {
+        if (pref_debug_write_logcat)
+            Log.i("Yumura", "getStatusJustBefore(" + screenName + ")");
+
+        return getStatusesJustBefore(KeyManage.getCurrentUser().screenName, 1).get(0);
+    }
+
+    public static ResponseList<Status> getStatusesJustBefore(final String screenName) {
+        if (pref_debug_write_logcat)
+            Log.i("Yumura", "getStatusJustBefore(" + screenName + ")");
+
+        return getStatusesJustBefore(KeyManage.getCurrentUser().screenName, 10);
+    }
+
+    public static ResponseList<Status> getStatusesJustBefore(final String screenName, final int count) {
+        if (pref_debug_write_logcat)
+            Log.i("Yumura", "getStatusesJustBefore(" + screenName + ")");
+
         if (!screenName.equals("")) {
+            final Paging paging = new Paging();
+            paging.setCount(count);
             try {
-                final User user = getTwitter(screenName).showUser(screenName);
-                Status status = user.getStatus();
-                status = getTwitter(screenName).showStatus(status.getId());
-                if (status != null)
-                    return status;
+                return getTwitter(screenName).getUserTimeline(screenName, paging);
             } catch (Exception e) {
                 if (pref_debug_write_logcat)
-                    Log.e("Yumura", "getStatusJustBefore() E: " + e.getMessage());
+                    Log.e("Yumura", "getStatusesJustBefore() E: " + e.getMessage());
             }
         }
 
         return null;
     }
 
-    public static ResponseList<Status> getStatusesJustBefore(final String screenName) {
-        final Paging paging = new Paging();
-        paging.setCount(10);
-        try {
-            return getTwitter(screenName).getUserTimeline(screenName, paging);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     public static Twitter getTwitter() {
-        return getTwitter("");
+        try {
+            return getTwitter(KeyManage.getCurrentUser().screenName);
+        } catch (Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", "getTwitter(String) E: " + e.getMessage());
+        }
+
+        return (new TwitterFactory(getConfiguration(CONSUMER_KEY, CONSUMER_SECRET))).getSingleton();
     }
 
     public static Twitter getTwitter(final String screenName) {
@@ -281,9 +347,19 @@ public class TwitterAccess {
     public static Status showStatus(final long id) {
         if (id > -1) {
             try {
-                return getTwitter().showStatus(id);
+                return getTwitter(KeyManage.getCurrentUser().screenName).showStatus(id);
+            } catch (TwitterException e) {
+                try {
+                    if (pref_debug_write_logcat)
+                        Log.e("Yumura", "showStatus(" + KeyManage.getCurrentUser().screenName + ") TE: " + e.getMessage());
+                } catch (Exception ex) {
+                }
             } catch (Exception e) {
-                if (pref_debug_write_logcat) Log.e("Yumura", "showStatus() E: " + e.getMessage());
+                try {
+                    if (pref_debug_write_logcat)
+                        Log.e("Yumura", "showStatus(" + KeyManage.getCurrentUser().screenName + ") E: " + e.getMessage());
+                } catch (Exception ex) {
+                }
             }
         }
 

@@ -165,7 +165,13 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
             makeShortcut(searchViewString);
             return true;
         } else if (id == R.id.action_move_to_unread) {
-            adapter.moveToUnread();
+
+            new Thread(new Runnable() {
+                @Override
+                public final void run() {
+                    adapter.moveToUnread();
+                }
+            }).start();
             return true;
         } else if (id == R.id.action_settings) {
             Intent intent = new Intent(this, PreferenceActivity.class);
@@ -181,7 +187,7 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
     @Override
     public void onConnect() {
         isConnected = true;
-        Toast.makeText(this, getString(R.string.message_on_connect), Toast.LENGTH_SHORT).show();
+        // Toast.makeText(this, getString(R.string.message_on_connect), Toast.LENGTH_SHORT).show();
 
         if (fab == null)
             fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -280,14 +286,17 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
         new Thread(new Runnable() {
             @Override
             public final void run() {
-                final Status status = TwitterAccess.getStatusJustBefore(KeyManage.getCurrentUser().screenName);
+                final Status status = TwitterAccess.getStatusesJustBefore(KeyManage.getCurrentUser().screenName).get(0);
+                if (pref_debug_write_logcat)
+                    Log.i("Yumura", "delJustBefore() " + ViewString.getStatusText(status,false));
 
                 runOnUiThread(new Runnable() {
                     @Override
                     public final void run() {
+
                         AlertDialog.Builder builder = new AlertDialog.Builder(TlActivity.this);
                         builder.setTitle(R.string.action_delJustBefore);
-                        builder.setMessage(ViewString.getScreennameAndText(status));
+                        builder.setMessage(ViewString.getScreennameAndTextAndFooter(status));
                         builder.setPositiveButton(R.string.action_delJustBefore_del,
                                 new DialogInterface.OnClickListener() {
 

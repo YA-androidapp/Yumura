@@ -41,16 +41,14 @@ import twitter4j.ResponseList;
 import twitter4j.Status;
 
 public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
+    public static final int snackbarIconWidth = 64;
+    public static final int snackbarIconHeight = 64;
     private boolean pref_debug_write_logcat = false;
     private boolean pref_tl_img_show = true;
     private boolean pref_tl_reverse_direction = false;
-
     private Context context;
-
     private float pref_tl_textsize_default = 12f;
-
     private ImageLoader mImageLoader;
-
     private int pref_tl_iconsize_default = 20;
 
     private LayoutInflater mLayoutInflater;
@@ -183,42 +181,57 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
             } catch (Exception e) {
             }
         }
+
+        long lastReadTweet;
         try {
-            long lastReadTweet = PreferenceManage.getLong(context, PreferenceManage.Last_Read_Tweet, 0);
+            lastReadTweet = PreferenceManage.getLong(context, PreferenceManage.Last_Read_Tweet, 0);
             if (pref_debug_write_logcat)
                 Log.i("Yumura", "lastReadTweet: " + Long.toString(lastReadTweet));
             if ((lastReadTweet > 0) && (getItemId(0) >= lastReadTweet) && (getItemId(getItemCount() - 2) <= lastReadTweet)) {
                 final int position = BinarySearchUtil.binary_search_id(lastReadTweet, getList());
                 scrollTo(position);
                 return;
-            } else {
-                final Status status = TwitterAccess.getStatusJustBefore(KeyManage.getCurrentUser().screenName);
-                if ((status != null) && (("," + pref_tl_move_to_unread_mute_source + ",").indexOf("," + status.getSource() + ",") == -1)) {
-                    lastReadTweet = status.getId();
-                    if ((lastReadTweet > 0) && (getItemId(0) >= lastReadTweet) && (getItemId(getItemCount() - 2) <= lastReadTweet)) {
-                        final int position = BinarySearchUtil.binary_search_id(lastReadTweet, getList());
-                        scrollTo(position);
-                        return;
-                    }
-                } else {
-                    ResponseList<Status> responseList = TwitterAccess.getStatusesJustBefore(KeyManage.getCurrentUser().screenName);
-                    if (responseList != null) {
-                        for (Status s : responseList) {
-                            if ((s != null) && (("," + pref_tl_move_to_unread_mute_source + ",").indexOf("," + s.getSource() + ",") == -1)) {
-                                lastReadTweet = s.getId();
-                                if ((lastReadTweet > 0) && (getItemId(0) >= lastReadTweet) && (getItemId(getItemCount() - 2) <= lastReadTweet)) {
-                                    final int position = BinarySearchUtil.binary_search_id(lastReadTweet, getList());
-                                    scrollTo(position);
-                                    return;
-                                }
-                            }
+            }
+        } catch (Exception e1) {
+            if (pref_debug_write_logcat) Log.e("Yumura", "getItemId() E1: " + e1.getMessage());
+        }
+
+        try {
+            final Status status = TwitterAccess.getStatusJustBefore(KeyManage.getCurrentUser().screenName);
+            if ((status != null) && (("," + pref_tl_move_to_unread_mute_source + ",").indexOf("," + status.getSource() + ",") == -1)) {
+                lastReadTweet = status.getId();
+                if (pref_debug_write_logcat)
+                    Log.i("Yumura", "lastReadTweet: " + Long.toString(lastReadTweet));
+                if ((lastReadTweet > 0) && (getItemId(0) >= lastReadTweet) && (getItemId(getItemCount() - 2) <= lastReadTweet)) {
+                    final int position = BinarySearchUtil.binary_search_id(lastReadTweet, getList());
+                    scrollTo(position);
+                    return;
+                }
+            }
+        } catch (Exception e2) {
+            if (pref_debug_write_logcat) Log.e("Yumura", "getItemId() E2: " + e2.getMessage());
+        }
+
+        try {
+            ResponseList<Status> responseList = TwitterAccess.getStatusesJustBefore(KeyManage.getCurrentUser().screenName);
+            if (responseList != null) {
+                for (Status s : responseList) {
+                    if ((s != null) && (("," + pref_tl_move_to_unread_mute_source + ",").indexOf("," + s.getSource() + ",") == -1)) {
+                        lastReadTweet = s.getId();
+                        if (pref_debug_write_logcat)
+                            Log.i("Yumura", "lastReadTweet: " + Long.toString(lastReadTweet));
+                        if ((lastReadTweet > 0) && (getItemId(0) >= lastReadTweet) && (getItemId(getItemCount() - 2) <= lastReadTweet)) {
+                            final int position = BinarySearchUtil.binary_search_id(lastReadTweet, getList());
+                            scrollTo(position);
+                            return;
                         }
                     }
                 }
             }
 
             moveToStartPositionOfReading();
-        } catch (Exception e) {
+        } catch (Exception e3) {
+            if (pref_debug_write_logcat) Log.e("Yumura", "getItemId() E3: " + e3.getMessage());
         }
     }
 
@@ -341,16 +354,37 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
 
                         //
 
-                        final int width = 64;
-                        final int height = 64;
                         Drawable drawable = context.getResources().getDrawable(R.drawable.ic_launcher);
 
                         final Bitmap orgBitmap = ((BitmapDrawable) drawable).getBitmap();
 
                         final Snackbar snackbar = Snackbar.make(fab, actionText + ": " + text, Snackbar.LENGTH_LONG);
                         final View snackbarLayout = snackbar.getView();
-                        final Bitmap resizedBitmap = Bitmap.createScaledBitmap(orgBitmap, width, height, false);
+                        final Bitmap resizedBitmap = Bitmap.createScaledBitmap(orgBitmap, snackbarIconWidth, snackbarIconHeight, false);
                         drawable = new BitmapDrawable(context.getResources(), resizedBitmap);
+                        final TextView textView = (TextView) snackbarLayout.findViewById(android.support.design.R.id.snackbar_text);
+                        textView.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null);
+                        snackbar.show();
+                    }
+                }
+            });
+        } catch (Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", "showSnackbar() E: " + e.getMessage());
+        }
+    }
+
+    public void showSnackbar(final String actionText, final String text, final Drawable drawable) {
+        try {
+            ((Activity) context).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    final FloatingActionButton fab = (FloatingActionButton) ((Activity) context).findViewById(R.id.fab);
+                    if (fab != null) {
+                        final Snackbar snackbar = Snackbar.make(fab, actionText + ": " + text, Snackbar.LENGTH_LONG);
+                        final View snackbarLayout = snackbar.getView();
+                        final Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
+                        final Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, snackbarIconWidth, snackbarIconHeight, false);
+                        final Drawable drawable = new BitmapDrawable(context.getResources(), resizedBitmap);
                         final TextView textView = (TextView) snackbarLayout.findViewById(android.support.design.R.id.snackbar_text);
                         textView.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null);
                         snackbar.show();
@@ -451,7 +485,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
         holder.statusIcon.setOnClickListener(
                 new View.OnClickListener() {
                     public void onClick(View v) {
-                        TweetMenu.showTweetMenu(context, status);
+                        TweetMenu.showTweetMenu(context, TlAdapter.this, status);
                     }
                 }
         );

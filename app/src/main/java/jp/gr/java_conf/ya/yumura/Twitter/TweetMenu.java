@@ -14,21 +14,25 @@ import java.util.List;
 import jp.gr.java_conf.ya.yumura.R;
 import jp.gr.java_conf.ya.yumura.String.ViewString;
 import jp.gr.java_conf.ya.yumura.Time.Time;
+import jp.gr.java_conf.ya.yumura.TlAdapter;
 import twitter4j.Status;
 import twitter4j.StatusUpdate;
+import twitter4j.TwitterAdapter;
 import twitter4j.URLEntity;
 
 public class TweetMenu {
     private static boolean pref_debug_write_logcat = false;
     private static Context context;
+    private static TlAdapter adapter;
 
-    public static void showTweetMenu(final Context c, Status status) {
+    public static void showTweetMenu(final Context c, final TlAdapter a,  Status status) {
         context = c;
+        adapter = a;
 
         if (status == null)
             return;
 
-        if (Time.differenceMinutes(status.getCreatedAt()) > 2) {
+        if (Time.differenceMinutes(status.getCreatedAt()) > 0) {
             try {
                 final Status tempStatus = TwitterAccess.showStatus(status.getId());
                 if (tempStatus != null)
@@ -129,7 +133,7 @@ public class TweetMenu {
                     public void onClick(DialogInterface dialog, int which) {
                         if ((editText != null) && (!editText.getText().toString().equals(""))) {
                             try {
-                                final TwitterAccess twitterAccess = new TwitterAccess(null);
+                                final TwitterAccess twitterAccess = new TwitterAccess(adapter);
                                 final StatusUpdate statusUpdate = new StatusUpdate(editText.getText().toString());
                                 statusUpdate.inReplyToStatusId(status.getId());
                                 twitterAccess.updateStatus(menuItemArray[which].replace("@", ""), statusUpdate);
@@ -154,7 +158,7 @@ public class TweetMenu {
                             @Override
                             public final void run() {
                                 try {
-                                    TwitterAccess twitterAccess = new TwitterAccess(null);
+                                    TwitterAccess twitterAccess = new TwitterAccess(adapter);
                                     twitterAccess.retweet(menuItemArray[which], status);
                                 } catch (Exception e) {
                                     if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
@@ -178,7 +182,7 @@ public class TweetMenu {
                             @Override
                             public final void run() {
                                 try {
-                                    TwitterAccess twitterAccess = new TwitterAccess(null);
+                                    TwitterAccess twitterAccess = new TwitterAccess(adapter);
                                     twitterAccess.userRetweet(menuItemArray[which], status);
                                 } catch (Exception e) {
                                     if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
@@ -202,7 +206,7 @@ public class TweetMenu {
                             @Override
                             public final void run() {
                                 try {
-                                    TwitterAccess twitterAccess = new TwitterAccess(null);
+                                    TwitterAccess twitterAccess = new TwitterAccess(adapter);
                                     twitterAccess.createFavorite(menuItemArray[which], status);
                                 } catch (Exception e) {
                                     if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
@@ -229,7 +233,7 @@ public class TweetMenu {
                                     @Override
                                     public final void run() {
                                         try {
-                                            TwitterAccess twitterAccess = new TwitterAccess(null);
+                                            TwitterAccess twitterAccess = new TwitterAccess(adapter);
                                             twitterAccess.destroyFavorite(menuItemArray[which], status);
                                         } catch (Exception e) {
                                             if (pref_debug_write_logcat)
@@ -298,7 +302,7 @@ public class TweetMenu {
                             @Override
                             public final void run() {
                                 try {
-                                    TwitterAccess twitterAccess = new TwitterAccess(null);
+                                    TwitterAccess twitterAccess = new TwitterAccess(adapter);
                                     twitterAccess.destroyStatus(menuItemArray[which], status);
                                 } catch (Exception e) {
                                     if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
@@ -322,7 +326,7 @@ public class TweetMenu {
                             @Override
                             public final void run() {
                                 try {
-                                    TwitterAccess twitterAccess = new TwitterAccess(null);
+                                    TwitterAccess twitterAccess = new TwitterAccess(adapter);
                                     twitterAccess.pak(menuItemArray[which].replace("@", ""), status);
                                 } catch (Exception e) {
                                     if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());

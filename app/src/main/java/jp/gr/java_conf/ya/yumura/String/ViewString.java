@@ -14,88 +14,94 @@ import twitter4j.Status;
 import twitter4j.URLEntity;
 
 public class ViewString {
-    private static final int imgHeight = 20;
-
-    public static final SimpleDateFormat sdf_yyyyMMddHHmmssOnlyNumber = new SimpleDateFormat("yyyyMMddHHmmss", Locale.JAPAN);
-    public static final SimpleDateFormat sdf_yyyyMMddHHmmssSSSOnlyNumber = new SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.JAPAN);
+    // public static final SimpleDateFormat sdf_yyyyMMddHHmmssOnlyNumber = new SimpleDateFormat("yyyyMMddHHmmss", Locale.JAPAN);
+    // public static final SimpleDateFormat sdf_yyyyMMddHHmmssSSSOnlyNumber = new SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.JAPAN);
     public static final SimpleDateFormat sdf_yyyyMMddHHmmssSSS = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS", Locale.JAPAN);
     private static boolean pref_debug_write_logcat = false;
 
-    public static String getTweetFooter(final Status status) {
-        final StringBuilder sb = new StringBuilder();
-
-        try {
-            sb.append(sdf_yyyyMMddHHmmssSSS.format(status.getCreatedAt())).append(" ");
-            if (status.getRetweetCount() > 0)
-                sb.append(status.getRetweetCount()).append("RT ");
-            if (status.getFavoriteCount() > 0)
-                sb.append(status.getFavoriteCount()).append("Fav ");
-            sb.append(status.getSource().replaceAll("<[^>]+>", ""));
-
-            return sb.toString();
-        } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
-            return "";
-        }
-    }
-
     public static String getScreennameAndText(final Status status) {
         final StringBuilder sb = new StringBuilder();
-
+        if (pref_debug_write_logcat)
+            Log.i("Yumura", "getScreennameAndText() sb");
         try {
-            if (status.getUser() != null)
-                if (status.getUser().getScreenName() != null)
-                    sb.append("@").append(status.getUser().getScreenName()).append(": ");
-
-            if (status.getText() != null)
-                sb.append(status.getText());
-
-            return sb.toString();
+            sb.append("@");
+            sb.append(status.getUser().getScreenName());
+            sb.append(": ");
+            sb.append(status.getText());
         } catch (Exception e) {
             if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
-            return "";
         }
+        return sb.toString();
     }
 
-    public static String getStatusText(final Status status, final boolean pref_tl_img_show) {
+    public static String getScreennameAndTextAndFooter(Status status) {
+        status = getOriginalStatus(status);
         final StringBuilder sb = new StringBuilder();
-
         try {
-            if (status.getUser() != null) {
-                if (status.getUser().getScreenName() != null) {
-                    sb.append("@").append(status.getUser().getScreenName());
-
-                    if (status.isFavorited())
-                        sb.append("<img src=\"favorite_on\">");
-
-                    if (status.isRetweetedByMe()) {
-                        sb.append("<img src=\"retweet_on\">");
-                    } else if (status.isRetweet()) {
-                        sb.append("<img src=\"retweet_hover\">");
-                    }
-
-                    sb.append("<br>");
-                }
-            }
-
-            if (status != null) {
-                sb.append(getTextExpanded(status, pref_tl_img_show)).append("<br>");
-                sb.append(getTweetFooter(status));
-            }
-
-            return sb.toString();
+            sb.append("@");
+            sb.append(status.getUser().getScreenName());
+            sb.append(": ");
+            sb.append(status.getText());
+            sb.append(" ");
+            sb.append(getTweetFooter(status));
         } catch (Exception e) {
             if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
-            return "";
         }
+        return sb.toString();
+    }
+
+    public static String getStatusText(Status status, final boolean pref_tl_img_show) {
+        status = getOriginalStatus(status);
+        final StringBuilder sb = new StringBuilder();
+        try {
+            sb.append("@").append(status.getUser().getScreenName()).append(" <br>");
+            sb.append(getTextExpanded(status, pref_tl_img_show)).append("<br>");
+            sb.append(getTweetFooter(status));
+
+            if (status.isFavorited())
+                sb.append("<img src=\"favorite_on\">");
+
+            if (status.isRetweetedByMe()) {
+                sb.append("<img src=\"retweet_on\">");
+            } else if (status.isRetweet()) {
+                sb.append("<img src=\"retweet_hover\">");
+            }
+        } catch (Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+        }
+        return sb.toString();
     }
 
     public static String getTextExpanded(final Status status, final boolean pref_tl_img_show) {
         String text = status.getText();
 
         text = getTextExpandedTco(text, status);
-        if(pref_tl_img_show)
-        text = getTextExpandedImg(text, status);
+        if (pref_tl_img_show)
+            text = getTextExpandedImg(text, status);
+
+        return text;
+    }
+
+    public static String getTextExpandedImg(String text, final Status status) {
+        MediaEntity[] extendedMediaEntities = status.getExtendedMediaEntities();
+        for (int i = 0; i < extendedMediaEntities.length; i++) {
+            int pSizeKey = MediaEntity.Size.LARGE + 1;
+            MediaEntity.Size pSize = null;
+            String pMediaUrl = "";
+
+            final MediaEntity mediaEntity = extendedMediaEntities[i];
+            final Map<Integer, MediaEntity.Size> sizes = mediaEntity.getSizes();
+            for (Map.Entry<Integer, MediaEntity.Size> e : sizes.entrySet()) {
+                final Integer sizeKey = e.getKey();
+                if (sizeKey < pSizeKey) {
+                    pSize = e.getValue();
+                    pMediaUrl = getSizeMediaURL(mediaEntity.getMediaURL(), getSizeString(sizeKey));
+                }
+            }
+
+            final String link = getLinkedImg(mediaEntity.getExpandedURL(), pMediaUrl, pSize, mediaEntity.getDisplayURL());
+            text = text + " " + link;
+        }
 
         return text;
     }
@@ -115,11 +121,32 @@ public class ViewString {
         return text;
     }
 
-    private static String getSizeMediaURL(String mediaUrl, String sizeString) {
+    public static String getLinkedImg(final String href, final String src, final MediaEntity.Size size, final String displayUrl) {
+        return "<a href=\"" + href + "\">" + displayUrl + "<img src=\"" + src + "\" width=\"" + Integer.toString(size.getWidth()) + "\" height=\"" + Integer.toString(size.getHeight()) + "\" ></a>";
+    }
+
+    public static String getLinkedUrl(final URLEntity entity) {
+        return "<a href=\"" + entity.getExpandedURL() + "\">" + entity.getExpandedURL() + "</a>";
+    }
+
+    private static Status getOriginalStatus(final Status status) {
+        try {
+            return (status.getRetweetedStatus() != null) ? status.getRetweetedStatus() : status;
+        } catch (Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+            return status;
+        }
+    }
+
+    public static String getParmaLink(final Status status) {
+        return TwitterAccess.URL_PROTOCOL + TwitterAccess.URL_TWITTER + "/" + status.getUser().getScreenName() + "/status/" + status.getId();
+    }
+
+    private static String getSizeMediaURL(final String mediaUrl, final String sizeString) {
         return mediaUrl + ":" + sizeString;
     }
 
-    private static String getSizeString(Integer sizeKey) {
+    private static String getSizeString(final Integer sizeKey) {
         if (MediaEntity.Size.LARGE.equals(sizeKey)) {
             return "large";
         } else if (MediaEntity.Size.MEDIUM.equals(sizeKey)) {
@@ -133,39 +160,19 @@ public class ViewString {
         }
     }
 
-    public static String getTextExpandedImg(String text, final Status status) {
-        MediaEntity[] extendedMediaEntities = status.getExtendedMediaEntities();
-        for (int i = 0; i < extendedMediaEntities.length; i++) {
-            int pSizeKey = MediaEntity.Size.LARGE + 1;
-            MediaEntity.Size pSize = null;
-            String pMediaUrl = "";
+    public static String getTweetFooter(final Status status) {
+        final StringBuilder sb = new StringBuilder();
 
-            final MediaEntity mediaEntity = extendedMediaEntities[i];
-            final Map<Integer, MediaEntity.Size> sizes = mediaEntity.getSizes();
-            for (Map.Entry<Integer, MediaEntity.Size> e : sizes.entrySet()) {
-                Integer sizeKey = e.getKey();
-                if (sizeKey < pSizeKey) {
-                    pSize = e.getValue();
-                    pMediaUrl = getSizeMediaURL(mediaEntity.getMediaURL(), getSizeString(sizeKey));
-                }
-            }
-
-            final String link = getLinkedImg(mediaEntity.getExpandedURL(), pMediaUrl, pSize);
-            text = text + " " + link;
+        try {
+            sb.append(sdf_yyyyMMddHHmmssSSS.format(status.getCreatedAt())).append(" ");
+            if (status.getRetweetCount() > 0)
+                sb.append(status.getRetweetCount()).append("RT ");
+            if (status.getFavoriteCount() > 0)
+                sb.append(status.getFavoriteCount()).append("Fav ");
+            sb.append(status.getSource().replaceAll("<[^>]+>", ""));
+        } catch (Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
-
-        return text;
-    }
-
-    public static String getLinkedUrl(final URLEntity entity) {
-        return "<a href=\"" + entity.getExpandedURL() + "\">" + entity.getExpandedURL() + "</a>";
-    }
-
-    public static String getLinkedImg(final String href, final String src, final MediaEntity.Size size) {
-        return "<a href=\"" + href + "\"><img src=\"" + src + "\" width=\"" + Integer.toString(size.getWidth()) + "\" height=\"" + Integer.toString(size.getHeight()) + "\" ></a>";
-    }
-
-    public static String getParmaLink(final Status status) {
-        return TwitterAccess.URL_PROTOCOL + TwitterAccess.URL_TWITTER + "/" + status.getUser().getScreenName() + "/status/" + status.getId();
+        return sb.toString();
     }
 }
