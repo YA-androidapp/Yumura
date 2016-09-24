@@ -78,6 +78,10 @@
             android:defaultValue="true"
             android:key="pref_webview_urlcheck_enabled"
             android:title="@string/pref_webview_urlcheck_enabled" />
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="pref_vieweractivity_use_urlstring"
+            android:title="@string/pref_vieweractivity_use_urlstring" />
 
         <EditTextPreference
             android:defaultValue="@string/pref_webview_custom_useragent"

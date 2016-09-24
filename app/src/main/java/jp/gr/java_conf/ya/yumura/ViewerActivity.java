@@ -11,8 +11,10 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -38,8 +40,11 @@ public class ViewerActivity extends AppCompatActivity {
     private SearchView searchView;
     private String searchViewString = "";
     private String pref_webview_custom_useragent = "";
+    private String gotTitleString = "";
+    private String gotUrlString = "";
     private WebView webView;
     private boolean pref_debug_write_logcat = true;
+    private boolean pref_vieweractivity_use_urlstring = true;
     private boolean pref_webview_js_enabled = false;
     private boolean pref_webview_urlcheck_enabled = true;
     private SearchView.OnQueryTextListener onQueryTextListener = new SearchView.OnQueryTextListener() {
@@ -57,45 +62,68 @@ public class ViewerActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        pref_debug_write_logcat = PreferenceManage.getBoolean(this, "pref_debug_write_logcat", false);
-        pref_webview_js_enabled = PreferenceManage.getBoolean(this, "pref_webview_js_enabled", false);
-        pref_webview_urlcheck_enabled = PreferenceManage.getBoolean(this, "pref_webview_urlcheck_enabled", false);
-        pref_webview_custom_useragent = PreferenceManage.getString(this, "pref_webview_custom_useragent", "");
 
-        new Thread(new Runnable() {
-            @Override
-            public final void run() {
-                final String urlString = IntentString.getUrlFromIntent(getIntent(), BLANK_URL);
+        getPreferences();
 
-                final boolean isFastWifi = CheckConnectivity.getWifiSpeed() >= 300;
+        if (CheckConnectivity.isConnected()) {
+            new Thread(new Runnable() {
+                @Override
+                public final void run() {
+                    gotUrlString = IntentString.getUrlFromIntent(getIntent(), BLANK_URL);
 
-                runOnUiThread(new Runnable() {
-                    @SuppressLint("SetJavaScriptEnabled")
-                    @Override
-                    public final void run() {
-                        webView = new WebView(ViewerActivity.this);
-                        webView.setWebViewClient(new WebViewClient());
-                        webView.getSettings().setAppCacheEnabled(true);
-                        webView.getSettings().setCacheMode(
-                                isFastWifi
-                                        ? WebSettings.LOAD_NO_CACHE
-                                        : WebSettings.LOAD_CACHE_ELSE_NETWORK);
-                        webView.getSettings().setJavaScriptEnabled(pref_webview_js_enabled);
-                        if (!pref_webview_custom_useragent.equals(""))
-                            webView.getSettings().setUserAgentString(pref_webview_custom_useragent);
-                        setContentView(webView);
+                    final boolean isFastWifi = CheckConnectivity.getWifiSpeed() >= 300;
 
-                        loadUrl(urlString);
-                    }
-                });
-            }
-        }).start();
+                    runOnUiThread(new Runnable() {
+                        @SuppressLint("SetJavaScriptEnabled")
+                        @Override
+                        public final void run() {
+                            webView = new WebView(ViewerActivity.this);
+                            webView.setWebViewClient(new WebViewClient() {
+                                @Override
+                                public void onPageFinished(WebView view, String url) {
+                                    if (gotTitleString.equals(""))
+                                        gotTitleString = webView.getTitle();
+                                }
+                            });
+                            webView.getSettings().setAppCacheEnabled(true);
+                            webView.getSettings().setCacheMode(
+                                    isFastWifi
+                                            ? WebSettings.LOAD_NO_CACHE
+                                            : WebSettings.LOAD_CACHE_ELSE_NETWORK);
+                            webView.getSettings().setJavaScriptEnabled(pref_webview_js_enabled);
+                            if (!pref_webview_custom_useragent.equals(""))
+                                webView.getSettings().setUserAgentString(pref_webview_custom_useragent);
+                            webView.setOnKeyListener(new View.OnKeyListener() {
+                                @Override
+                                public boolean onKey(View v, int keyCode, KeyEvent event) {
+                                    if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                                        final WebView webView = (WebView) v;
+                                        switch (keyCode) {
+                                            case KeyEvent.KEYCODE_BACK:
+                                                if (webView.canGoBack()) {
+                                                    webView.goBack();
+                                                    return true;
+                                                }
+                                                break;
+                                        }
+                                    }
+                                    return false;
+                                }
+                            });
+                            setContentView(webView);
+
+                            loadUrl(gotUrlString);
+                        }
+                    });
+                }
+            }).start();
+        }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_viewer, menu);
-        MenuItem menuItem = menu.findItem(R.id.search_menu_search);
+        final MenuItem menuItem = menu.findItem(R.id.search_menu_search);
         this.searchView = (SearchView) MenuItemCompat.getActionView(menuItem);
         this.searchView.setIconifiedByDefault(true);
         this.searchView.setSubmitButtonEnabled(true);
@@ -115,7 +143,7 @@ public class ViewerActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
+        final int id = item.getItemId();
         if (id == R.id.action_update) {
             new Thread(new Runnable() {
                 @Override
@@ -124,7 +152,7 @@ public class ViewerActivity extends AppCompatActivity {
                         @Override
                         public final void run() {
                             try {
-                                final String updateText = webView.getTitle() + " " + webView.getUrl();
+                                final String updateText = ((pref_vieweractivity_use_urlstring || gotTitleString.equals("")) ? gotTitleString : webView.getTitle()) + " " + (pref_vieweractivity_use_urlstring ? gotUrlString : webView.getUrl());
                                 final Bundle args = new Bundle();
                                 args.putString(KEY_UPDATE_TEXT, updateText);
                                 final DialogFragment_UpdateStatus dialogFragment_UpdateStatus = new DialogFragment_UpdateStatus();
@@ -145,8 +173,17 @@ public class ViewerActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        getPreferences();
+    }
+
     private boolean checkUrl(String urlString) {
-        if (pref_webview_urlcheck_enabled) {
+        if (urlString.equals("")) {
+            return false;
+        } else if (pref_webview_urlcheck_enabled) {
             if (urlString.equals(BLANK_URL)) {
                 return true;
             }
@@ -165,40 +202,49 @@ public class ViewerActivity extends AppCompatActivity {
         }
     }
 
+    private void getPreferences() {
+        pref_debug_write_logcat = PreferenceManage.getBoolean(this, "pref_debug_write_logcat", false);
+        pref_vieweractivity_use_urlstring = PreferenceManage.getBoolean(this, "pref_vieweractivity_use_urlstring", true);
+        pref_webview_js_enabled = PreferenceManage.getBoolean(this, "pref_webview_js_enabled", false);
+        pref_webview_urlcheck_enabled = PreferenceManage.getBoolean(this, "pref_webview_urlcheck_enabled", false);
+        pref_webview_custom_useragent = PreferenceManage.getString(this, "pref_webview_custom_useragent", "");
+    }
+
     private void loadUrl(String urlString) {
-        if (checkUrl(urlString)) {
+        if (checkUrl(urlString))
             webView.loadUrl(urlString);
-        }
     }
 
     private boolean setSearchWord(final String searchWord) {
-        new Thread(new Runnable() {
-            @Override
-            public final void run() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public final void run() {
-                        try {
-                            ActionBar actionBar = getSupportActionBar();
-                            actionBar.setTitle(searchWord);
-                            actionBar.setDisplayShowTitleEnabled(true);
-                            if (searchWord != null && !searchWord.equals("")) {
-                                searchViewString = searchWord;
-                                if ((searchViewString.startsWith("http")) || (searchViewString.startsWith("about:"))) {
-                                    loadUrl(searchViewString);
-                                } else {
-                                    loadUrl(GOOGLE_SEARCH_URL + URLEncoder.encode(searchViewString, "UTF-8"));
+        if (CheckConnectivity.isConnected()) {
+            new Thread(new Runnable() {
+                @Override
+                public final void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public final void run() {
+                            try {
+                                final ActionBar actionBar = getSupportActionBar();
+                                actionBar.setTitle(searchWord);
+                                actionBar.setDisplayShowTitleEnabled(true);
+                                if (searchWord != null && !searchWord.equals("")) {
+                                    searchViewString = searchWord;
+                                    if ((searchViewString.startsWith("http")) || (searchViewString.startsWith("about:"))) {
+                                        loadUrl(searchViewString);
+                                    } else {
+                                        loadUrl(GOOGLE_SEARCH_URL + URLEncoder.encode(searchViewString, "UTF-8"));
+                                    }
                                 }
+                                searchView.clearFocus();
+                                actionBar.collapseActionView();
+                            } catch (Exception e) {
+                                if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                             }
-                            searchView.clearFocus();
-                            actionBar.collapseActionView();
-                        } catch (Exception e) {
-                            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                         }
-                    }
-                });
-            }
-        }).start();
+                    });
+                }
+            }).start();
+        }
 
         return false;
     }
@@ -216,7 +262,7 @@ public class ViewerActivity extends AppCompatActivity {
             editText.setHint(R.string.action_update_text);
             editText.setText(updateText);
 
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setTitle(R.string.action_update);
             builder.setView(editText);
             builder.setPositiveButton(R.string.action_update,

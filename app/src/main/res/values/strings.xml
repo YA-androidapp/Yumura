@@ -76,6 +76,7 @@
     <string name="pref_tl_reverse_direction">Read Direction</string>
     <string name="pref_tl_reverse_direction_message">Reverse the read direction of timelines (true: From bottom to top)</string>
 
+    <string name="pref_vieweractivity_use_urlstring">投稿時に現在のページのURLではなくIntentで受け取ったURLを使う</string>
     <string name="pref_webview_js_enabled">Javascriptを有効にする</string>
     <string name="pref_webview_urlcheck_enabled">URLチェックを有効にする</string>
     <string name="pref_webview_urlcheck_enabled_message">HTTP／HTTPSプロトコルのみ許可します</string>
