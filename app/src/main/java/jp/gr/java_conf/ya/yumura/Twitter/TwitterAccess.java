@@ -366,7 +366,7 @@ public class TwitterAccess {
         return null;
     }
 
-    public static String[] getUserListUrls(String screenName) {
+    public static List<String> getUserListUrls(String screenName) {
         if ((screenName == null) || (screenName.equals(""))) {
             screenName = KeyManage.getCurrentUser().screenName;
         }
@@ -382,14 +382,14 @@ public class TwitterAccess {
             if (pref_debug_write_logcat) Log.e("Yumura", "getUserListUrls() E: " + e.getMessage());
         }
         if (lists.size() > 0) {
-            for (UserList list : lists) {
+            for (final UserList list : lists) {
                 if (KeyManage.isAuthenticatedUser(list.getUser().getScreenName())) {
-                    urls.add(list.getURI().toString());
+                    urls.add(URL_PROTOCOL + URL_TWITTER + list.getURI().toString());
                 }
             }
         }
 
-        return urls.toArray(new String[0]);
+        return urls;
     }
 
     private static String getCommunicationVolumeOfThisApp() {

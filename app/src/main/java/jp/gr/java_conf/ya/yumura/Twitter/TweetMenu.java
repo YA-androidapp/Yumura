@@ -48,9 +48,9 @@ public class TweetMenu {
         final String screennameAndText = ViewString.getScreennameAndText(status);
 
         final List<String> menuItem = new ArrayList<>();
-        menuItem.add("@" + status.getUser().getScreenName());
+        menuItem.add("@" + statusMe.getUser().getScreenName());
         if (status.getRetweetedStatus() != null)
-            menuItem.add("@" + status.getUser().getScreenName());
+            menuItem.add("@" + statusRT.getUser().getScreenName());
         menuItem.add(context.getString(R.string.tweet_reply));
         menuItem.add(context.getString(R.string.tweet_retweet));
         menuItem.add(context.getString(R.string.tweet_userretweet));

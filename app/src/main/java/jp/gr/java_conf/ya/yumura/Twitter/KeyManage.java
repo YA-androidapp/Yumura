@@ -242,7 +242,7 @@ public class KeyManage {
     public static boolean isAuthenticatedUser(String screenName) {
         String[] authenticatedScreennames = getScreenNames("", "");
         for (String authenticatedScreenname : authenticatedScreennames) {
-            if ((authenticatedScreenname.equals(screenName)) && (authenticatedScreenname.equals("")))
+            if ((authenticatedScreenname.equals(screenName)) && (!authenticatedScreenname.equals("")))
                 return true;
         }
 

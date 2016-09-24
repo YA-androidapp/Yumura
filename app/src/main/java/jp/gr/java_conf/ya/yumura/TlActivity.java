@@ -48,7 +48,6 @@ import jp.gr.java_conf.ya.yumura.Twitter.BinarySearchUtil;
 import jp.gr.java_conf.ya.yumura.Twitter.KeyManage;
 import jp.gr.java_conf.ya.yumura.Twitter.OAuthUser;
 import jp.gr.java_conf.ya.yumura.Twitter.TwitterAccess;
-import twitter4j.ResponseList;
 import twitter4j.Status;
 import twitter4j.StatusUpdate;
 import twitter4j.auth.OAuthAuthorization;
@@ -119,9 +118,8 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
 
                 items.add(TwitterAccess.URL_PROTOCOL + TwitterAccess.URL_TWITTER_SEARCH);
 
-                for (String listUrl : TwitterAccess.getUserListUrls(oAuthUser.screenName)) {
+                for (final String listUrl : TwitterAccess.getUserListUrls(oAuthUser.screenName))
                     items.add(listUrl);
-                }
             }
             Collections.sort(items);
 
@@ -288,7 +286,7 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
             public final void run() {
                 final Status status = TwitterAccess.getStatusesJustBefore(KeyManage.getCurrentUser().screenName).get(0);
                 if (pref_debug_write_logcat)
-                    Log.i("Yumura", "delJustBefore() " + ViewString.getStatusText(status,false));
+                    Log.i("Yumura", "delJustBefore() " + ViewString.getStatusText(status, false));
 
                 runOnUiThread(new Runnable() {
                     @Override
@@ -336,7 +334,8 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
                         requestToken = oAuthAuthorization.getOAuthRequestToken(TwitterAccess.CALLBACK_URL);
                         startActivityForResult(new Intent(Intent.ACTION_VIEW, Uri.parse(requestToken.getAuthorizationURL())), 0);
                     } catch (Exception e1) {
-                        if (pref_debug_write_logcat) Log.e("Yumura", "doOAuth() E1: " + e1.getMessage());
+                        if (pref_debug_write_logcat)
+                            Log.e("Yumura", "doOAuth() E1: " + e1.getMessage());
                     }
                 }
             }).start();
@@ -535,7 +534,8 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
                             -1, // page
                             (upper ? (adapter.getList().get(0).getId() + 1) : -1)); // sinceId
                 } catch (Exception e) {
-                    if (pref_debug_write_logcat) Log.e("Yumura", "loadTimelineUpper() E: " + e.getMessage());
+                    if (pref_debug_write_logcat)
+                        Log.e("Yumura", "loadTimelineUpper() E: " + e.getMessage());
                     twitterAccess.loadTimeline(searchViewString, pref_tl_api_count, -1, -1, -1);
                 }
             }
@@ -679,7 +679,8 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
                                     final StatusUpdate statusUpdate = new StatusUpdate(editText.getText().toString());
                                     twitterAccess.updateStatus(menuItemArray[which].replace("@", ""), statusUpdate);
                                 } catch (Exception e) {
-                                    if (pref_debug_write_logcat) Log.e("Yumura", "onCreateDialog() E: " + e.getMessage());
+                                    if (pref_debug_write_logcat)
+                                        Log.e("Yumura", "onCreateDialog() E: " + e.getMessage());
                                 }
                             }
                         }
