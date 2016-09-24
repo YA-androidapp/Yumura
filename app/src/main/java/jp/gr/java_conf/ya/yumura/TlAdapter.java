@@ -3,7 +3,10 @@ package jp.gr.java_conf.ya.yumura; // Copyright (c) 2013-2016 YA <ya.androidapp@
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -91,14 +94,15 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
         if (pref_debug_write_logcat) Log.i("Yumura", "addDataOf()");
         if (dataList != null) {
             try {
-                ((Activity)context).runOnUiThread(new Runnable() {
+                ((Activity) context).runOnUiThread(new Runnable() {
                     @Override
                     public final void run() {
                         mDataList.addAll(dataList);
                     }
                 });
             } catch (Exception e) {
-                if (pref_debug_write_logcat) Log.e("Yumura", "addDataof(List<Status>) E: " + e.getMessage());
+                if (pref_debug_write_logcat)
+                    Log.e("Yumura", "addDataof(List<Status>) E: " + e.getMessage());
             }
         }
     }
@@ -107,14 +111,15 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
         if (pref_debug_write_logcat) Log.i("Yumura", "addDataOf()");
         if (data != null) {
             try {
-                ((Activity)context).runOnUiThread(new Runnable() {
+                ((Activity) context).runOnUiThread(new Runnable() {
                     @Override
                     public final void run() {
                         mDataList.add(data);
                     }
                 });
             } catch (Exception e) {
-                if (pref_debug_write_logcat) Log.e("Yumura", "addDataOf(Status) E: " + e.getMessage());
+                if (pref_debug_write_logcat)
+                    Log.e("Yumura", "addDataOf(Status) E: " + e.getMessage());
             }
         }
     }
@@ -329,9 +334,27 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
                 @Override
                 public void run() {
                     final FloatingActionButton fab = (FloatingActionButton) ((Activity) context).findViewById(R.id.fab);
-                    if (fab != null)
-                        Snackbar.make(fab, actionText + ": " + text, Snackbar.LENGTH_LONG)
-                                .setAction(actionText, null).show();
+                    if (fab != null) {
+
+//                        Snackbar.make(fab, actionText + ": " + text, Snackbar.LENGTH_LONG)
+//                                .setAction(actionText, null).show();
+
+                        //
+
+                        final int width = 64;
+                        final int height = 64;
+                        Drawable drawable = context.getResources().getDrawable(R.drawable.ic_launcher);
+
+                        final Bitmap orgBitmap = ((BitmapDrawable) drawable).getBitmap();
+
+                        final Snackbar snackbar = Snackbar.make(fab, actionText + ": " + text, Snackbar.LENGTH_LONG);
+                        final View snackbarLayout = snackbar.getView();
+                        final Bitmap resizedBitmap = Bitmap.createScaledBitmap(orgBitmap, width, height, false);
+                        drawable = new BitmapDrawable(context.getResources(), resizedBitmap);
+                        final TextView textView = (TextView) snackbarLayout.findViewById(android.support.design.R.id.snackbar_text);
+                        textView.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null);
+                        snackbar.show();
+                    }
                 }
             });
         } catch (Exception e) {
