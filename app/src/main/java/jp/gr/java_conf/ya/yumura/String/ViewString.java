@@ -14,9 +14,10 @@ import twitter4j.Status;
 import twitter4j.URLEntity;
 
 public class ViewString {
+    public static final SimpleDateFormat sdf_yyyyMMddHHmmss = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.JAPAN);
     // public static final SimpleDateFormat sdf_yyyyMMddHHmmssOnlyNumber = new SimpleDateFormat("yyyyMMddHHmmss", Locale.JAPAN);
+    // public static final SimpleDateFormat sdf_yyyyMMddHHmmssSSS = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS", Locale.JAPAN);
     // public static final SimpleDateFormat sdf_yyyyMMddHHmmssSSSOnlyNumber = new SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.JAPAN);
-    public static final SimpleDateFormat sdf_yyyyMMddHHmmssSSS = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS", Locale.JAPAN);
     private static boolean pref_debug_write_logcat = false;
 
     public static String getScreennameAndText(final Status status) {
@@ -50,20 +51,22 @@ public class ViewString {
         return sb.toString();
     }
 
-    public static String getStatusText(Status status, final boolean pref_tl_img_show) {
-        status = getOriginalStatus(status);
+    public static String getStatusText(final Status status, final boolean pref_tl_img_show) {
+        final Status originalStatus = getOriginalStatus(status);
         final StringBuilder sb = new StringBuilder();
         try {
-            sb.append("@").append(status.getUser().getScreenName()).append(" <br>");
-            sb.append(getTextExpanded(status, pref_tl_img_show)).append("<br>");
-            sb.append(getTweetFooter(status));
+            sb.append("@").append(originalStatus.getUser().getScreenName()).append(" <br>");
+            sb.append(getTextExpanded(originalStatus, pref_tl_img_show)).append("<br>");
+            if (status.getRetweetedStatus() != null)
+                sb.append(sdf_yyyyMMddHHmmss.format(status.getCreatedAt())).append("<br>");
+            sb.append(getTweetFooter(originalStatus));
 
-            if (status.isFavorited())
+            if (originalStatus.isFavorited())
                 sb.append("<img src=\"favorite_on\">");
 
-            if (status.isRetweetedByMe()) {
+            if (originalStatus.isRetweetedByMe()) {
                 sb.append("<img src=\"retweet_on\">");
-            } else if (status.isRetweet()) {
+            } else if (originalStatus.isRetweet()) {
                 sb.append("<img src=\"retweet_hover\">");
             }
         } catch (Exception e) {
@@ -164,7 +167,7 @@ public class ViewString {
         final StringBuilder sb = new StringBuilder();
 
         try {
-            sb.append(sdf_yyyyMMddHHmmssSSS.format(status.getCreatedAt())).append(" ");
+            sb.append(sdf_yyyyMMddHHmmss.format(status.getCreatedAt())).append(" ");
             if (status.getRetweetCount() > 0)
                 sb.append(status.getRetweetCount()).append("RT ");
             if (status.getFavoriteCount() > 0)

@@ -13,12 +13,24 @@
         android:icon="@android:drawable/ic_input_add"
         android:orderInCategory="100"
         android:title="@string/action_enter_url"
-        app:showAsAction="never" />
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_move_to_unread"
         android:icon="@android:drawable/ic_menu_view"
         android:orderInCategory="100"
         android:title="@string/action_move_to_unread"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_move_to_top"
+        android:icon="@android:drawable/arrow_up_float"
+        android:orderInCategory="100"
+        android:title="@string/action_move_to_top"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_move_to_bottom"
+        android:icon="@android:drawable/arrow_down_float"
+        android:orderInCategory="100"
+        android:title="@string/action_move_to_bottom"
         app:showAsAction="always" />
     <item
         android:id="@+id/action_delJustBefore"
@@ -31,17 +43,17 @@
         android:icon="@android:drawable/ic_menu_search"
         android:orderInCategory="100"
         android:title="@string/action_tl_search"
-        app:showAsAction="never" />
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_makeShortcut"
         android:icon="@android:drawable/ic_menu_add"
         android:orderInCategory="100"
         android:title="@string/action_makeShortcut"
-        app:showAsAction="never" />
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_settings"
         android:icon="@android:drawable/ic_menu_preferences"
         android:orderInCategory="100"
         android:title="@string/action_settings"
-        app:showAsAction="never" />
+        app:showAsAction="ifRoom" />
 </menu>

@@ -162,6 +162,12 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
         } else if (id == R.id.action_makeShortcut) {
             makeShortcut(searchViewString);
             return true;
+        } else if (id == R.id.action_move_to_bottom) {
+            adapter.scrollTo(adapter.getItemCount() - 2);
+            return true;
+        } else if (id == R.id.action_move_to_top) {
+            adapter.scrollTo(0);
+            return true;
         } else if (id == R.id.action_move_to_unread) {
 
             new Thread(new Runnable() {
