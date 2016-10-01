@@ -2,6 +2,8 @@ package jp.gr.java_conf.ya.yumura.String; // Copyright (c) 2013-2016 YA <ya.andr
 
 import android.util.Log;
 
+import com.twitter.Autolink;
+
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.Map;
@@ -18,17 +20,17 @@ public class ViewString {
     // public static final SimpleDateFormat sdf_yyyyMMddHHmmssOnlyNumber = new SimpleDateFormat("yyyyMMddHHmmss", Locale.JAPAN);
     // public static final SimpleDateFormat sdf_yyyyMMddHHmmssSSS = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS", Locale.JAPAN);
     // public static final SimpleDateFormat sdf_yyyyMMddHHmmssSSSOnlyNumber = new SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.JAPAN);
-    private static boolean pref_debug_write_logcat = false;
+    private static boolean pref_debug_write_logcat = true;
+
+    private Autolink autolink = new Autolink();
 
     public static String getScreennameAndText(final Status status) {
         final StringBuilder sb = new StringBuilder();
         if (pref_debug_write_logcat)
             Log.i("Yumura", "getScreennameAndText() sb");
         try {
-            sb.append("@");
-            sb.append(status.getUser().getScreenName());
-            sb.append(": ");
-            sb.append(status.getText());
+            sb.append("@").append(status.getUser().getScreenName()).append(": ")
+                    .append(status.getText());
         } catch (Exception e) {
             if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
@@ -39,62 +41,25 @@ public class ViewString {
         status = getOriginalStatus(status);
         final StringBuilder sb = new StringBuilder();
         try {
-            sb.append("@");
-            sb.append(status.getUser().getScreenName());
-            sb.append(": ");
-            sb.append(status.getText());
-            sb.append(" ");
-            sb.append(getTweetFooter(status));
+            sb.append("@").append(status.getUser().getScreenName()).append(": ")
+                    .append(status.getText()).append(" ")
+                    .append(getTweetFooter(status, "", ""));
         } catch (Exception e) {
             if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
         return sb.toString();
     }
 
-    public static String getStatusText(final Status status, final boolean pref_tl_img_show) {
-        final Status originalStatus = getOriginalStatus(status);
-        final StringBuilder sb = new StringBuilder();
-        try {
-            sb.append("@").append(originalStatus.getUser().getScreenName()).append(" <br>");
-            sb.append(getTextExpanded(originalStatus, pref_tl_img_show)).append("<br>");
-            if (status.getRetweetedStatus() != null)
-                sb.append(sdf_yyyyMMddHHmmss.format(status.getCreatedAt())).append("<br>");
-            sb.append(getTweetFooter(originalStatus));
-
-            if (originalStatus.isFavorited())
-                sb.append("<img src=\"favorite_on\">");
-
-            if (originalStatus.isRetweetedByMe()) {
-                sb.append("<img src=\"retweet_on\">");
-            } else if (originalStatus.isRetweet()) {
-                sb.append("<img src=\"retweet_hover\">");
-            }
-        } catch (Exception e) {
-            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
-        }
-        return sb.toString();
-    }
-
-    public static String getTextExpanded(final Status status, final boolean pref_tl_img_show) {
-        String text = status.getText();
-
-        text = getTextExpandedTco(text, status);
-        if (pref_tl_img_show)
-            text = getTextExpandedImg(text, status);
-
-        return text;
-    }
-
-    public static String getTextExpandedImg(String text, final Status status) {
-        MediaEntity[] extendedMediaEntities = status.getExtendedMediaEntities();
+    public static String getTextExpandedImg(String text, final Status status, final boolean pref_tl_img_show) {
+        final MediaEntity[] extendedMediaEntities = status.getExtendedMediaEntities();
         for (int i = 0; i < extendedMediaEntities.length; i++) {
-            int pSizeKey = MediaEntity.Size.LARGE + 1;
+            final int pSizeKey = MediaEntity.Size.LARGE + 1;
             MediaEntity.Size pSize = null;
             String pMediaUrl = "";
 
             final MediaEntity mediaEntity = extendedMediaEntities[i];
             final Map<Integer, MediaEntity.Size> sizes = mediaEntity.getSizes();
-            for (Map.Entry<Integer, MediaEntity.Size> e : sizes.entrySet()) {
+            for (final Map.Entry<Integer, MediaEntity.Size> e : sizes.entrySet()) {
                 final Integer sizeKey = e.getKey();
                 if (sizeKey < pSizeKey) {
                     pSize = e.getValue();
@@ -102,8 +67,16 @@ public class ViewString {
                 }
             }
 
-            final String link = getLinkedImg(mediaEntity.getExpandedURL(), pMediaUrl, pSize, mediaEntity.getDisplayURL());
-            text = text + " " + link;
+            if (pref_tl_img_show) {
+                final String link = getLinkedImg(mediaEntity.getExpandedURL(), pMediaUrl, pSize, mediaEntity.getDisplayURL());
+                text = text + " " + link;
+            } else {
+                final String link = getLinkedUrl(mediaEntity);
+                final String tco = mediaEntity.getURL();
+                final Pattern p = Pattern.compile(tco);
+                final Matcher m = p.matcher(text);
+                text = m.replaceAll(link);
+            }
         }
 
         return text;
@@ -112,7 +85,7 @@ public class ViewString {
     public static String getTextExpandedTco(String text, final Status status) {
         final URLEntity[] entities = status.getURLEntities();
         if ((entities != null) && (entities.length > 0)) {
-            for (URLEntity entity : entities) {
+            for (final URLEntity entity : entities) {
                 final String link = getLinkedUrl(entity);
                 final String tco = entity.getURL();
                 final Pattern p = Pattern.compile(tco);
@@ -122,6 +95,19 @@ public class ViewString {
         }
 
         return text;
+    }
+
+    public static String getStyledString(final String text, final String colorString) {
+        if (!colorString.equals("")) {
+            // try {
+            // Color.parseColor(colorString);
+            return "<font color=\"" + colorString + "\">" + text + "</font>";
+            // }catch (Exception e){
+            // return text;
+            // }
+        } else {
+            return text;
+        }
     }
 
     public static String getLinkedImg(final String href, final String src, final MediaEntity.Size size, final String displayUrl) {
@@ -163,19 +149,62 @@ public class ViewString {
         }
     }
 
-    public static String getTweetFooter(final Status status) {
+    public static String getTweetFooter(final Status status, final String pref_tl_fontcolor_favorite, final String pref_tl_fontcolor_retweet) {
         final StringBuilder sb = new StringBuilder();
 
         try {
             sb.append(sdf_yyyyMMddHHmmss.format(status.getCreatedAt())).append(" ");
             if (status.getRetweetCount() > 0)
-                sb.append(status.getRetweetCount()).append("RT ");
+                sb.append(getStyledString(status.getRetweetCount() + "RT", pref_tl_fontcolor_retweet)).append(" ");
+
             if (status.getFavoriteCount() > 0)
-                sb.append(status.getFavoriteCount()).append("Fav ");
+                sb.append(getStyledString(status.getFavoriteCount() + "Fav", pref_tl_fontcolor_favorite)).append(" ");
+
             sb.append(status.getSource().replaceAll("<[^>]+>", ""));
         } catch (Exception e) {
             if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
         }
         return sb.toString();
+    }
+
+    public String getStatusText(final Status status, final boolean pref_tl_img_show, final String pref_tl_fontcolor_favorite, final String pref_tl_fontcolor_retweet) {
+        final Status originalStatus = getOriginalStatus(status);
+        final StringBuilder sb = new StringBuilder();
+        try {
+            sb.append("@").append(originalStatus.getUser().getScreenName()).append(" <br>")
+                    .append(getTextExpanded(status, pref_tl_img_show)).append("<br>")
+                    .append(getTweetFooter(originalStatus, pref_tl_fontcolor_favorite, pref_tl_fontcolor_retweet));
+            if (status.getRetweetedStatus() != null) {
+                sb.append("<br>")
+                        .append(getStyledString((sdf_yyyyMMddHHmmss.format(status.getCreatedAt()) + " RTed by @" + status.getUser().getScreenName()), pref_tl_fontcolor_retweet));
+            }
+
+            if (originalStatus.isFavorited())
+                sb.append("<img src=\"favorite_on\">");
+
+            if (originalStatus.isRetweetedByMe()) {
+                sb.append("<img src=\"retweet_on\">");
+            } else if (originalStatus.isRetweet()) {
+                sb.append("<img src=\"retweet_hover\">");
+            }
+        } catch (Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+        }
+        return sb.toString();
+    }
+
+    public String getTextExpanded(final Status status, final boolean pref_tl_img_show) {
+        String text = status.getText();
+
+        text = getTextExpandedTco(text, status);
+        text = getTextExpandedImg(text, status, pref_tl_img_show);
+
+        try {
+            text = autolink.autoLinkUsernamesAndLists(text);
+            text = autolink.autoLinkHashtags(text);
+        } catch (Exception e) {
+            if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
+        }
+        return text;
     }
 }

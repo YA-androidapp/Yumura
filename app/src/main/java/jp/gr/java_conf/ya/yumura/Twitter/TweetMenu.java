@@ -17,7 +17,6 @@ import jp.gr.java_conf.ya.yumura.Time.Time;
 import jp.gr.java_conf.ya.yumura.TlAdapter;
 import twitter4j.Status;
 import twitter4j.StatusUpdate;
-import twitter4j.TwitterAdapter;
 import twitter4j.URLEntity;
 
 public class TweetMenu {
@@ -25,7 +24,7 @@ public class TweetMenu {
     private static Context context;
     private static TlAdapter adapter;
 
-    public static void showTweetMenu(final Context c, final TlAdapter a,  Status status) {
+    public static void showTweetMenu(final Context c, final TlAdapter a, Status status) {
         context = c;
         adapter = a;
 

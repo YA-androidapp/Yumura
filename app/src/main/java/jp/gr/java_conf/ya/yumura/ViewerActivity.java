@@ -86,6 +86,8 @@ public class ViewerActivity extends AppCompatActivity {
                                 }
                             });
                             webView.getSettings().setAppCacheEnabled(true);
+                            webView.getSettings().setBuiltInZoomControls(true);
+                            webView.getSettings().setDisplayZoomControls(false);
                             webView.getSettings().setCacheMode(
                                     isFastWifi
                                             ? WebSettings.LOAD_NO_CACHE
@@ -205,9 +207,9 @@ public class ViewerActivity extends AppCompatActivity {
     private void getPreferences() {
         pref_debug_write_logcat = PreferenceManage.getBoolean(this, "pref_debug_write_logcat", false);
         pref_vieweractivity_use_urlstring = PreferenceManage.getBoolean(this, "pref_vieweractivity_use_urlstring", true);
+        pref_webview_custom_useragent = PreferenceManage.getString(this, "pref_webview_custom_useragent", "");
         pref_webview_js_enabled = PreferenceManage.getBoolean(this, "pref_webview_js_enabled", false);
         pref_webview_urlcheck_enabled = PreferenceManage.getBoolean(this, "pref_webview_urlcheck_enabled", false);
-        pref_webview_custom_useragent = PreferenceManage.getString(this, "pref_webview_custom_useragent", "");
     }
 
     private void loadUrl(String urlString) {

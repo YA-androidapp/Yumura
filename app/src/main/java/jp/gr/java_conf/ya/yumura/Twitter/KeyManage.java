@@ -64,15 +64,15 @@ public class KeyManage {
         return null;
     }
 
-    public static void setCurrentUser(final OAuthUser oauthUser) {
-        if (oauthUser != null) {
-            currentUser = oauthUser;
-        }
-    }
-
     public static void setCurrentUser(final long userId) {
         if (userId > -1) {
             setCurrentUser(getUser(userId));
+        }
+    }
+
+    public static void setCurrentUser(final OAuthUser oauthUser) {
+        if (oauthUser != null) {
+            currentUser = oauthUser;
         }
     }
 

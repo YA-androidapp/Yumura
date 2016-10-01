@@ -57,6 +57,8 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
 
     private SortedList<Status> mDataList;
 
+    private String pref_tl_fontcolor_favorite = "#ffe45f";
+    private String pref_tl_fontcolor_retweet = "#56bf0c";
     private String pref_tl_theme_list = "web";
     private int pref_tl_theme_color_background = Color.TRANSPARENT;
     private int pref_tl_theme_color_font = Color.TRANSPARENT;
@@ -66,6 +68,8 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     private String pref_tl_mute_text = "";
 
     private String[] muteTextArray;
+
+    private ViewString viewString = new ViewString();
 
     public TlAdapter(final Context context, final RecyclerView recyclerView) {
         super();
@@ -260,9 +264,15 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
             holder.statusText.setMovementMethod(movementmethod);
             final ImgGetter imgGetter = new ImgGetter(holder.statusText, context);
             if (Build.VERSION.SDK_INT >= 24) {
-                holder.statusText.setText(Html.fromHtml(ViewString.getStatusText(status, pref_tl_img_show), Html.FROM_HTML_MODE_LEGACY, imgGetter, null));
+                holder.statusText.setText(
+                        Html.fromHtml(
+                                viewString.getStatusText(status, pref_tl_img_show, pref_tl_fontcolor_favorite, pref_tl_fontcolor_retweet),
+                                Html.FROM_HTML_MODE_LEGACY, imgGetter, null));
             } else {
-                holder.statusText.setText(Html.fromHtml(ViewString.getStatusText(status, pref_tl_img_show), imgGetter, null));
+                holder.statusText.setText(
+                        Html.fromHtml(
+                                viewString.getStatusText(status, pref_tl_img_show, pref_tl_fontcolor_favorite, pref_tl_fontcolor_retweet),
+                                imgGetter, null));
             }
             holder.statusText.setTextSize(pref_tl_textsize_default);
             holder.statusText.setOnClickListener(
@@ -411,14 +421,16 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
 
     private void getPreferences() {
         pref_debug_write_logcat = PreferenceManage.getBoolean(context, "pref_debug_write_logcat", pref_debug_write_logcat);
+        pref_icon_mute_screenname = "," + PreferenceManage.getString(context, "pref_icon_mute_screenname", pref_icon_mute_screenname) + ",";
+        pref_tl_fontcolor_favorite = PreferenceManage.getString(context, "pref_tl_fontcolor_favorite", pref_tl_fontcolor_favorite);
+        pref_tl_fontcolor_retweet = PreferenceManage.getString(context, "pref_tl_fontcolor_retweet", pref_tl_fontcolor_retweet);
         pref_tl_iconsize_default = (int) (context.getResources().getDisplayMetrics().density *
                 PreferenceManage.getInt(context, "pref_tl_iconsize_default",
                         (int) (context.getResources().getDisplayMetrics().density * pref_tl_iconsize_default)));
-        pref_icon_mute_screenname = "," + PreferenceManage.getString(context, "pref_icon_mute_screenname", pref_icon_mute_screenname) + ",";
+        pref_tl_img_show = PreferenceManage.getBoolean(context, "pref_tl_img_show", pref_tl_img_show);
         pref_tl_move_to_unread_mute_source = PreferenceManage.getString(context, "pref_tl_move_to_unread_mute_source", pref_tl_move_to_unread_mute_source);
         pref_tl_mute_screenname = "," + PreferenceManage.getString(context, "pref_tl_mute_screenname", pref_tl_mute_screenname) + ",";
         pref_tl_mute_text = PreferenceManage.getString(context, "pref_tl_mute_text", pref_tl_mute_text);
-        pref_tl_img_show = PreferenceManage.getBoolean(context, "pref_tl_img_show", pref_tl_img_show);
         pref_tl_reverse_direction = PreferenceManage.getBoolean(context, "pref_tl_textsize_default", pref_tl_reverse_direction);
         pref_tl_textsize_default = PreferenceManage.getFloat(context, "pref_tl_textsize_default", pref_tl_textsize_default);
 

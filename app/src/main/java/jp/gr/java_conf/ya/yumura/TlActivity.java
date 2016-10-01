@@ -64,7 +64,6 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
     private static Date preGetAutoCompleteItems_EnterUrl = new Date(0);
     private boolean isConnected = false;
     private boolean pref_debug_write_logcat = false;
-    private boolean pref_tl_reverse_direction = false;
     private ConnectionReceiver receiver;
     private Date preOnLoadMoreTime = new Date(0);
     private Date preSwipeRefreshTime = new Date(0);
@@ -73,7 +72,6 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
     private RecyclerView recyclerView;
     private SwipeRefreshLayout swipeRefresh;
     private SearchView searchView;
-    private String pref_tl_theme_list = "";
     private String searchViewString = "";
 
     private TlAdapter adapter;
@@ -201,8 +199,6 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
     private void getPreferences() {
         pref_debug_write_logcat = PreferenceManage.getBoolean(this, "pref_debug_write_logcat", pref_debug_write_logcat);
         pref_tl_api_count = PreferenceManage.getInt(this, "pref_tl_api_count", pref_tl_api_count);
-        pref_tl_reverse_direction = PreferenceManage.getBoolean(this, "pref_tl_textsize_default", pref_tl_reverse_direction);
-        pref_tl_theme_list = PreferenceManage.getString(this, "pref_tl_theme_list", pref_tl_theme_list);
     }
 
     @Override
@@ -292,7 +288,7 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
             public final void run() {
                 final Status status = TwitterAccess.getStatusesJustBefore(KeyManage.getCurrentUser().screenName).get(0);
                 if (pref_debug_write_logcat)
-                    Log.i("Yumura", "delJustBefore() " + ViewString.getStatusText(status, false));
+                    Log.i("Yumura", "delJustBefore() " + (new ViewString()).getStatusText(status, false, "", ""));
 
                 runOnUiThread(new Runnable() {
                     @Override

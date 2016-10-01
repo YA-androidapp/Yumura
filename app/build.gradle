@@ -26,6 +26,7 @@ dependencies {
     compile 'com.android.support:design:24.2.0'
     compile 'com.android.support:recyclerview-v7:24.2.0'
     compile 'com.android.volley:volley:1.0.0'
+    compile 'com.twitter:twitter-text:1.6.1'
     compile 'org.twitter4j:twitter4j-async:4.0.4'
     compile 'org.twitter4j:twitter4j-core:4.0.4'
     compile 'org.twitter4j:twitter4j-media-support:4.0.4'

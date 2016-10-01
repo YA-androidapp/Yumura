@@ -40,6 +40,22 @@
             android:positiveButtonText="@string/action_ok"
             android:title="@string/pref_tl_theme_list" />
 
+        <EditTextPreference
+            android:defaultValue="@string/pref_tl_fontcolor_favorite_value"
+            android:key="pref_tl_fontcolor_favorite"
+            android:maxLines="1"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:title="@string/pref_tl_fontcolor_favorite" />
+
+        <EditTextPreference
+            android:defaultValue="@string/pref_tl_fontcolor_retweet_value"
+            android:key="pref_tl_fontcolor_retweet"
+            android:maxLines="1"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:title="@string/pref_tl_fontcolor_retweet" />
+
         <PreferenceScreen android:title="@string/title_tl_mute">
             <PreferenceCategory android:title="@string/title_tl_mute">
                 <EditTextPreference
