@@ -117,7 +117,7 @@ public class TwitterAccess {
                     public final void run() {
                         adapter.addDataOf(statuses);
                         adapter.notifyDataSetChanged();
-                        adapter.moveToStartPositionOfReading();
+                        adapter.moveToStartPositionAfterLoaded(statuses.size());
                         adapter.showSnackbar("Loaded", Integer.toString(statuses.size()) + " tweets ; " + getCommunicationVolumeOfThisApp() + " B");
                     }
                 });
@@ -200,7 +200,7 @@ public class TwitterAccess {
                     public final void run() {
                         adapter.addDataOf(queryResult.getTweets());
                         adapter.notifyDataSetChanged();
-                        adapter.moveToStartPositionOfReading();
+                        adapter.moveToStartPositionAfterLoaded(queryResult.getCount());
                         adapter.showSnackbar("Loaded", Integer.toString(queryResult.getTweets().size()) + " tweets ; " + getCommunicationVolumeOfThisApp() + " B");
                     }
                 });

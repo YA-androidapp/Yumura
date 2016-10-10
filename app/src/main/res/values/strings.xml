@@ -8,6 +8,8 @@
     <string name="action_delJustBefore">直前のツイートを削除</string>
     <string name="action_delJustBefore_del">削除</string>
     <string name="action_enter_url">URL入力（自動補完）</string>
+    <string name="action_load_lower">タイムライン読み込み(下)</string>
+    <string name="action_load_upper">タイムライン読み込み(上)</string>
     <string name="action_makeShortcut">ショートカットを作成</string>
     <string name="action_move_to_bottom">最下部へ移動</string>
     <string name="action_move_to_top">最上部へ移動</string>

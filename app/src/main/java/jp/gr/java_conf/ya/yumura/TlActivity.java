@@ -87,6 +87,8 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
             return false;
         }
     };
+    private int sequenceLoadedNumber = 0;
+    private int maxSequenceLoadedNumber = 3;
 
     public static String[] getAutoCompleteItems_EnterUrl() {
         if ((autoCompleteItems_EnterUrl != null)
@@ -156,6 +158,12 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
             return true;
         } else if (id == R.id.action_delJustBefore) {
             delJustBefore();
+            return true;
+        } else if (id == R.id.action_load_upper) {
+            loadTimelineUpper(true);
+            return true;
+        } else if (id == R.id.action_load_lower) {
+            loadTimelineUpper(false);
             return true;
         } else if (id == R.id.action_makeShortcut) {
             makeShortcut(searchViewString);
@@ -498,12 +506,7 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
             @Override
             public void onRefresh() {
                 if (pref_debug_write_logcat) Log.i("Yumura", "onRefresh()");
-                if (pref_debug_write_logcat)
-                    Log.i("Yumura", "Time.differenceMinutes(preSwipeRefreshTime): "
-                            + Integer.toString(Time.differenceMinutes(preSwipeRefreshTime)));
-
                 loadTimelineUpper(true);
-
                 changeRefreshLayoutIcon(false);
             }
         });
@@ -512,12 +515,16 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
     }
 
     private void loadTimelineUpper(boolean upper) {
+        if (!upper)
+            changeRefreshLayoutIcon(true);
+
         if ((upper && (Time.differenceMinutes(preSwipeRefreshTime) > 0))
                 || (!upper && (Time.differenceMinutes(preOnLoadMoreTime) > 0))) {
-
-            if (!upper)
-                changeRefreshLayoutIcon(true);
-
+            sequenceLoadedNumber = 0;
+        } else {
+            sequenceLoadedNumber++;
+        }
+        if (sequenceLoadedNumber < maxSequenceLoadedNumber) {
             if (twitterAccess == null)
                 twitterAccess = new TwitterAccess(adapter);
 

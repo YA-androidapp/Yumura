@@ -172,7 +172,7 @@ public class ViewString {
         final StringBuilder sb = new StringBuilder();
         try {
             sb.append("@").append(originalStatus.getUser().getScreenName()).append(" <br>")
-                    .append(getTextExpanded(status, pref_tl_img_show)).append("<br>")
+                    .append(getTextExpanded(originalStatus, pref_tl_img_show)).append("<br>")
                     .append(getTweetFooter(originalStatus, pref_tl_fontcolor_favorite, pref_tl_fontcolor_retweet));
             if (status.getRetweetedStatus() != null) {
                 sb.append("<br>")

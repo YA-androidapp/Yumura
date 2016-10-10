@@ -33,6 +33,18 @@
         android:title="@string/action_move_to_bottom"
         app:showAsAction="always" />
     <item
+        android:id="@+id/action_load_upper"
+        android:icon="@android:drawable/arrow_up_float"
+        android:orderInCategory="100"
+        android:title="@string/action_load_upper"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_load_lower"
+        android:icon="@android:drawable/arrow_down_float"
+        android:orderInCategory="100"
+        android:title="@string/action_load_lower"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/action_delJustBefore"
         android:icon="@android:drawable/ic_menu_delete"
         android:orderInCategory="100"

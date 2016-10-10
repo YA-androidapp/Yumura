@@ -49,6 +49,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     private Context context;
     private float pref_tl_textsize_default = 12f;
     private ImageLoader mImageLoader;
+    private int pref_tl_api_count = 20;
     private int pref_tl_iconsize_default = 20;
 
     private LayoutInflater mLayoutInflater;
@@ -170,10 +171,32 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
         return mDataList.indexOf(status);
     }
 
+    public final void moveToStartPositionAfterLoaded(final int statusesCount) {
+        if (statusesCount < pref_tl_api_count * 0.9) {
+            if (pref_tl_reverse_direction) {
+                // true: From bottom to top
+                try {
+                    if (statusesCount > 1)
+                        scrollTo(statusesCount - 2);
+                } catch (Exception e) {
+                }
+            } else {
+                scrollTo(1);
+            }
+        } else {
+            moveToStartPositionOfReading();
+        }
+    }
+
     public final void moveToStartPositionOfReading() {
         if (pref_tl_reverse_direction) {
             // true: From bottom to top
-            scrollTo(getItemCount() - 2);
+            try {
+                scrollTo(getItemCount() - 2);
+            } catch (Exception e) {
+            }
+        } else {
+            scrollTo(1);
         }
     }
 
@@ -232,10 +255,13 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
                     }
                 }
             }
-
-            moveToStartPositionOfReading();
         } catch (Exception e3) {
             if (pref_debug_write_logcat) Log.e("Yumura", "getItemId() E3: " + e3.getMessage());
+        }
+        try {
+            moveToStartPositionOfReading();
+        } catch (Exception e4) {
+            if (pref_debug_write_logcat) Log.e("Yumura", "getItemId() E4: " + e4.getMessage());
         }
     }
 
@@ -424,6 +450,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
         pref_icon_mute_screenname = "," + PreferenceManage.getString(context, "pref_icon_mute_screenname", pref_icon_mute_screenname) + ",";
         pref_tl_fontcolor_favorite = PreferenceManage.getString(context, "pref_tl_fontcolor_favorite", pref_tl_fontcolor_favorite);
         pref_tl_fontcolor_retweet = PreferenceManage.getString(context, "pref_tl_fontcolor_retweet", pref_tl_fontcolor_retweet);
+        pref_tl_api_count = PreferenceManage.getInt(context, "pref_tl_iconsize_default", pref_tl_api_count);
         pref_tl_iconsize_default = (int) (context.getResources().getDisplayMetrics().density *
                 PreferenceManage.getInt(context, "pref_tl_iconsize_default",
                         (int) (context.getResources().getDisplayMetrics().density * pref_tl_iconsize_default)));
@@ -431,12 +458,11 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
         pref_tl_move_to_unread_mute_source = PreferenceManage.getString(context, "pref_tl_move_to_unread_mute_source", pref_tl_move_to_unread_mute_source);
         pref_tl_mute_screenname = "," + PreferenceManage.getString(context, "pref_tl_mute_screenname", pref_tl_mute_screenname) + ",";
         pref_tl_mute_text = PreferenceManage.getString(context, "pref_tl_mute_text", pref_tl_mute_text);
-        pref_tl_reverse_direction = PreferenceManage.getBoolean(context, "pref_tl_textsize_default", pref_tl_reverse_direction);
+        pref_tl_reverse_direction = PreferenceManage.getBoolean(context, "pref_tl_reverse_direction", pref_tl_reverse_direction);
         pref_tl_textsize_default = PreferenceManage.getFloat(context, "pref_tl_textsize_default", pref_tl_textsize_default);
 
         if ((pref_tl_mute_text != null) && (!pref_tl_mute_text.equals("")))
             muteTextArray = pref_tl_mute_text.split(",");
-
 
         new Thread(new Runnable() {
             @Override
