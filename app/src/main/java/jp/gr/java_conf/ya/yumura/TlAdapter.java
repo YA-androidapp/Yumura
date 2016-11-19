@@ -368,31 +368,35 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     }
 
     public void scrollTo(final int pos) {
-        try {
-            ((Activity) context).runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if ((0 <= pos) && (pos < getItemCount()))
-                        recyclerView.smoothScrollToPosition(pos);
-                }
-            });
-        } catch (Exception e) {
+        if (recyclerView != null) {
+            try {
+                ((Activity) context).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if ((0 <= pos) && (pos < getItemCount()))
+                            recyclerView.smoothScrollToPosition(pos);
+                    }
+                });
+            } catch (Exception e) {
+            }
         }
     }
 
     public final void changeRefreshLayoutIcon(final boolean enable) {
-        try {
-            ((Activity) context).runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (enable) {
-                        swipeRefresh.setRefreshing(true);
-                    } else {
-                        swipeRefresh.setRefreshing(false);
+        if (swipeRefresh != null) {
+            try {
+                ((Activity) context).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (enable) {
+                            swipeRefresh.setRefreshing(true);
+                        } else {
+                            swipeRefresh.setRefreshing(false);
+                        }
                     }
-                }
-            });
-        } catch (Exception e) {
+                });
+            } catch (Exception e) {
+            }
         }
     }
 
