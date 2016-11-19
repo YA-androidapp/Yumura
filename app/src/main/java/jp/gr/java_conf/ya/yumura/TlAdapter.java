@@ -12,6 +12,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
@@ -55,6 +56,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     private LayoutInflater mLayoutInflater;
 
     private RecyclerView recyclerView;
+    private SwipeRefreshLayout swipeRefresh;
 
     private SortedList<Status> mDataList;
 
@@ -72,11 +74,12 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
 
     private ViewString viewString = new ViewString();
 
-    public TlAdapter(final Context context, final RecyclerView recyclerView) {
+    public TlAdapter(final Context context, final RecyclerView recyclerView, final SwipeRefreshLayout swipeRefresh) {
         super();
 
         this.context = context;
         this.recyclerView = recyclerView;
+        this.swipeRefresh = swipeRefresh;
         getPreferences();
 
         mLayoutInflater = LayoutInflater.from(context);
@@ -181,7 +184,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
                 } catch (Exception e) {
                 }
             } else {
-                scrollTo(1);
+                // scrollTo(1);
             }
         } else {
             moveToStartPositionOfReading();
@@ -196,7 +199,7 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
             } catch (Exception e) {
             }
         } else {
-            scrollTo(1);
+            // scrollTo(1);
         }
     }
 
@@ -371,6 +374,22 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
                 public void run() {
                     if ((0 <= pos) && (pos < getItemCount()))
                         recyclerView.smoothScrollToPosition(pos);
+                }
+            });
+        } catch (Exception e) {
+        }
+    }
+
+    public final void changeRefreshLayoutIcon(final boolean enable) {
+        try {
+            ((Activity) context).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (enable) {
+                        swipeRefresh.setRefreshing(true);
+                    } else {
+                        swipeRefresh.setRefreshing(false);
+                    }
                 }
             });
         } catch (Exception e) {

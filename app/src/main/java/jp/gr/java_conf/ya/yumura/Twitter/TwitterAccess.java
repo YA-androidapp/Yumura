@@ -134,6 +134,7 @@ public class TwitterAccess {
                         addDataOfAndNotify(statuses);
                     }
                 });
+                adapter.changeRefreshLayoutIcon(false);
             }
         }
 
@@ -147,6 +148,7 @@ public class TwitterAccess {
                         addDataOfAndNotify(statuses);
                     }
                 });
+                adapter.changeRefreshLayoutIcon(false);
             }
         }
 
@@ -160,6 +162,7 @@ public class TwitterAccess {
                         addDataOfAndNotify(statuses);
                     }
                 });
+                adapter.changeRefreshLayoutIcon(false);
             }
         }
 
@@ -173,6 +176,7 @@ public class TwitterAccess {
                         addDataOfAndNotify(statuses);
                     }
                 });
+                adapter.changeRefreshLayoutIcon(false);
             }
         }
 
@@ -188,6 +192,7 @@ public class TwitterAccess {
                         adapter.showSnackbar("Retweeted", ViewString.getScreennameAndText(retweetedStatus), d);
                     }
                 });
+                adapter.changeRefreshLayoutIcon(false);
             }
         }
 
@@ -204,6 +209,7 @@ public class TwitterAccess {
                         adapter.showSnackbar("Loaded", Integer.toString(queryResult.getTweets().size()) + " tweets ; " + getCommunicationVolumeOfThisApp() + " B");
                     }
                 });
+                adapter.changeRefreshLayoutIcon(false);
             }
         }
 
@@ -219,6 +225,7 @@ public class TwitterAccess {
                         adapter.notifyDataSetChanged();
                     }
                 });
+                adapter.changeRefreshLayoutIcon(false);
             }
         }
     };

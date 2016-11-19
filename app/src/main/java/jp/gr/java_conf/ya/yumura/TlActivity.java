@@ -498,8 +498,6 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
         });
 
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        adapter = new TlAdapter(this, recyclerView);
-
         swipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
         swipeRefresh.setColorSchemeResources(R.color.colorAccent);
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -510,6 +508,8 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
                 changeRefreshLayoutIcon(false);
             }
         });
+
+        adapter = new TlAdapter(this, recyclerView, swipeRefresh);
 
         setRecyclerView();
     }

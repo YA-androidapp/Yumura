@@ -154,7 +154,7 @@ public class ViewerActivity extends AppCompatActivity {
                         @Override
                         public final void run() {
                             try {
-                                final String updateText = ((pref_vieweractivity_use_urlstring || gotTitleString.equals("")) ? gotTitleString : webView.getTitle()) + " " + (pref_vieweractivity_use_urlstring ? gotUrlString : webView.getUrl());
+                                final String updateText = ((pref_vieweractivity_use_urlstring && !gotTitleString.equals("")) ? gotTitleString : webView.getTitle()) + " " + ((pref_vieweractivity_use_urlstring && !gotUrlString.equals("")) ? gotUrlString : webView.getUrl());
                                 final Bundle args = new Bundle();
                                 args.putString(KEY_UPDATE_TEXT, updateText);
                                 final DialogFragment_UpdateStatus dialogFragment_UpdateStatus = new DialogFragment_UpdateStatus();
@@ -273,7 +273,7 @@ public class ViewerActivity extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             if ((editText != null) && (!editText.getText().toString().equals(""))) {
-                                adapter = new TlAdapter(getActivity(), null);
+                                adapter = new TlAdapter(getActivity(), null, null);
                                 TwitterAccess twitterAccess = new TwitterAccess(adapter);
                                 twitterAccess.updateStatus(KeyManage.getCurrentUser().screenName, editText.getText().toString());
                             }
