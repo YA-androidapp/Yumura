@@ -1,3 +1,6 @@
+# Consumer key & secret
+app/src/main/java/jp/gr/java_conf/ya/yumura/Twitter/TwitterAccess.java
+
 # Built application files
 .gradle/*.apk
 .idea/*.apk

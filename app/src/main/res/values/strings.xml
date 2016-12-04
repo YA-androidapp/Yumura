@@ -24,6 +24,7 @@
     <string name="action_tl_search_text">本文</string>
     <string name="action_update">投稿</string>
     <string name="action_update_text">本文</string>
+    <string name="bird_gray">Twitter社のAPIによって取得した情報を表示しています</string>
     <string name="message_change_consumer_key">dev.twitter.comで取得したConsumer keyとConsumer secretをスペース区切りで入力してください</string>
     <string name="message_change_consumer_key_yes">変更してサインインへ進む</string>
     <string name="message_change_consumer_key_no">変更しない</string>
