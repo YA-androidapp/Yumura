@@ -1,4 +1,4 @@
-package jp.gr.java_conf.ya.yumura; // Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
+package jp.gr.java_conf.ya.yumura; // Copyright (c) 2013-2017 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
 
 import android.app.Activity;
 import android.content.Intent;
@@ -31,9 +31,6 @@ public class CallbackActivity extends Activity {
                 new Thread(new Runnable() {
                     @Override
                     public final void run() {
-                        // runOnUiThread(new Runnable() {
-                        // @Override
-                        // public final void run() {
                         try {
                             AccessToken accessToken = TlActivity.oAuthAuthorization.getOAuthAccessToken(TlActivity.requestToken, verifier);
                             KeyManage.addUser(new OAuthUser(accessToken.getScreenName(), savedConsumerKeyAndSecret[0], savedConsumerKeyAndSecret[1], accessToken.getScreenName(), accessToken.getToken(), accessToken.getTokenSecret(), accessToken.getUserId()));
@@ -43,8 +40,6 @@ public class CallbackActivity extends Activity {
                         } catch (Exception e) {
                             if (pref_debug_write_logcat) Log.e("Yumura", e.getMessage());
                         }
-                        // }
-                        // });
                     }
                 }).start();
             }

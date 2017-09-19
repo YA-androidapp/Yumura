@@ -1,4 +1,4 @@
-package jp.gr.java_conf.ya.yumura.Network; // Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
+package jp.gr.java_conf.ya.yumura.Network; // Copyright (c) 2013-2017 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
 
 // http://stackoverflow.com/questions/7424512/android-html-imagegetter-as-asynctask/7442725#7442725
 

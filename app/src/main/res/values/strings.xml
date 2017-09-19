@@ -1,4 +1,4 @@
-<resources><!-- Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0 -->
+<resources><!-- Copyright (c) 2013-2017 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0 -->
     <!-- TlActivity -->
     <string name="app_name">Yumura</string>
     <string name="app_name_viewer">Yumura viewer</string>
@@ -87,6 +87,7 @@
     <string name="pref_tl_reverse_direction_message">Reverse the read direction of timelines (true: From bottom to top)</string>
 
     <string name="pref_vieweractivity_use_urlstring">投稿時に現在のページのURLではなくIntentで受け取ったURLを使う</string>
+    <string name="pref_webview_clear_histories_enabled">終了時に履歴やCookie、キャッシュを削除する</string>
     <string name="pref_webview_js_enabled">Javascriptを有効にする</string>
     <string name="pref_webview_urlcheck_enabled">URLチェックを有効にする</string>
     <string name="pref_webview_urlcheck_enabled_message">HTTP／HTTPSプロトコルのみ許可します</string>

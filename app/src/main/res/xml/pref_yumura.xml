@@ -1,4 +1,4 @@
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"><!-- Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0 -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"><!-- Copyright (c) 2013-2017 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0 -->
 
     <PreferenceCategory android:title="@string/title_activity_tlactivity">
         <EditTextPreference
@@ -86,6 +86,11 @@
 
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/title_activity_vieweractivity">
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="pref_webview_clear_histories_enabled"
+            android:title="@string/pref_webview_clear_histories_enabled" />
         <SwitchPreference
             android:defaultValue="false"
             android:key="pref_webview_js_enabled"

@@ -1,4 +1,4 @@
-package jp.gr.java_conf.ya.yumura.Setting; // Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
+package jp.gr.java_conf.ya.yumura.Setting; // Copyright (c) 2013-2017 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
 
 import android.content.Context;
 import android.content.SharedPreferences;

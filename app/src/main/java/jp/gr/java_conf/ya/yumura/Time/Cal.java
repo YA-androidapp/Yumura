@@ -1,4 +1,4 @@
-package jp.gr.java_conf.ya.yumura.Time; // Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
+package jp.gr.java_conf.ya.yumura.Time; // Copyright (c) 2013-2017 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
 
 import java.util.Calendar;
 import java.util.StringTokenizer;
@@ -109,18 +109,14 @@ public class Cal {
         return result.toString();
     }
 
-    private static String fillString(String str,
-                                     String position, String addStr,
-                                     int len) {
+    private static String fillString(String str, String position, String addStr, int len) {
         if (str.length() > len)
             return "";
 
         return fillString(str, position, len, addStr);
     }
 
-    private static String fillString(String str, String position,
-                                     int len,
-                                     String addStr) {
+    private static String fillString(String str, String position, int len, String addStr) {
         if (addStr == null || addStr.length() == 0)
             return "";
 

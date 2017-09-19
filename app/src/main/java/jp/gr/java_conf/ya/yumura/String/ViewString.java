@@ -1,4 +1,4 @@
-package jp.gr.java_conf.ya.yumura.String; // Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
+package jp.gr.java_conf.ya.yumura.String; // Copyright (c) 2013-2017 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
 
 import android.util.Log;
 
@@ -17,9 +17,6 @@ import twitter4j.URLEntity;
 
 public class ViewString {
     public static final SimpleDateFormat sdf_yyyyMMddHHmmss = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.JAPAN);
-    // public static final SimpleDateFormat sdf_yyyyMMddHHmmssOnlyNumber = new SimpleDateFormat("yyyyMMddHHmmss", Locale.JAPAN);
-    // public static final SimpleDateFormat sdf_yyyyMMddHHmmssSSS = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS", Locale.JAPAN);
-    // public static final SimpleDateFormat sdf_yyyyMMddHHmmssSSSOnlyNumber = new SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.JAPAN);
     private static boolean pref_debug_write_logcat = true;
 
     private Autolink autolink = new Autolink();
@@ -99,12 +96,7 @@ public class ViewString {
 
     public static String getStyledString(final String text, final String colorString) {
         if (!colorString.equals("")) {
-            // try {
-            // Color.parseColor(colorString);
             return "<font color=\"" + colorString + "\">" + text + "</font>";
-            // }catch (Exception e){
-            // return text;
-            // }
         } else {
             return text;
         }

@@ -1,4 +1,4 @@
-package jp.gr.java_conf.ya.yumura.String; // Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
+package jp.gr.java_conf.ya.yumura.String; // Copyright (c) 2013-2017 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -22,10 +22,6 @@ public class IntentString {
                         while (it.hasNext()) {
                             final String key = (String) it.next();
                             final String value = args.getString(key);
-//                          if ((value.startsWith("https://"))||value.startsWith("http://")){
-//                              url = value;
-//                              break;
-//                          }
                             if (value != null) {
                                 sb.append(value);
                             }

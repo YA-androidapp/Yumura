@@ -1,4 +1,4 @@
-package jp.gr.java_conf.ya.yumura.Twitter; // Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
+package jp.gr.java_conf.ya.yumura.Twitter; // Copyright (c) 2013-2017 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -153,9 +153,6 @@ public class KeyManage {
             return null;
         } else {
             if (pref_debug_write_logcat) Log.i("Yumura", "!null");
-            // if(addAllAccount)
-            //     ids.add("All Accounts");
-
             myCrypt = new MyCrypt();
             if (pref_debug_write_logcat) Log.i("Yumura", "myCrypt");
 

@@ -1,9 +1,10 @@
-package jp.gr.java_conf.ya.yumura; // Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
+package jp.gr.java_conf.ya.yumura; // Copyright (c) 2013-2017 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.view.MenuItemCompat;
@@ -15,6 +16,8 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -45,6 +48,7 @@ public class ViewerActivity extends AppCompatActivity {
     private WebView webView;
     private boolean pref_debug_write_logcat = true;
     private boolean pref_vieweractivity_use_urlstring = true;
+    private boolean pref_webview_clear_histories_enabled = true;
     private boolean pref_webview_js_enabled = false;
     private boolean pref_webview_urlcheck_enabled = true;
     private SearchView.OnQueryTextListener onQueryTextListener = new SearchView.OnQueryTextListener() {
@@ -144,6 +148,14 @@ public class ViewerActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onDestroy() {
+        if(pref_webview_clear_histories_enabled)
+            clearWebviewContents();
+
+        super.onDestroy();
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         final int id = item.getItemId();
         if (id == R.id.action_update) {
@@ -204,9 +216,31 @@ public class ViewerActivity extends AppCompatActivity {
         }
     }
 
+    private void clearWebviewContents(){
+        if(webView==null)
+            webView = new WebView(ViewerActivity.this);
+
+        webView.loadUrl("about:blank");
+        webView.clearCache(true);
+        webView.clearHistory();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            CookieManager.getInstance().removeAllCookies(null);
+            CookieManager.getInstance().flush();
+        } else {
+            CookieSyncManager cookieSyncMngr=CookieSyncManager.createInstance(getApplicationContext());
+            cookieSyncMngr.startSync();
+            CookieManager cookieManager=CookieManager.getInstance();
+            cookieManager.removeAllCookie();
+            cookieManager.removeSessionCookie();
+            cookieSyncMngr.stopSync();
+            cookieSyncMngr.sync();
+        }
+    }
+
     private void getPreferences() {
         pref_debug_write_logcat = PreferenceManage.getBoolean(this, "pref_debug_write_logcat", false);
         pref_vieweractivity_use_urlstring = PreferenceManage.getBoolean(this, "pref_vieweractivity_use_urlstring", true);
+        pref_webview_clear_histories_enabled = PreferenceManage.getBoolean(this, "pref_webview_clear_histories_enabled", true);
         pref_webview_custom_useragent = PreferenceManage.getString(this, "pref_webview_custom_useragent", "");
         pref_webview_js_enabled = PreferenceManage.getBoolean(this, "pref_webview_js_enabled", false);
         pref_webview_urlcheck_enabled = PreferenceManage.getBoolean(this, "pref_webview_urlcheck_enabled", false);

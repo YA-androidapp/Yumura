@@ -1,4 +1,4 @@
-package jp.gr.java_conf.ya.yumura; // Copyright (c) 2013-2016 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
+package jp.gr.java_conf.ya.yumura; // Copyright (c) 2013-2017 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -218,18 +218,6 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
         registerConnectionReceiver();
 
         setViews();
-
-        if (CheckConnectivity.isConnected()) {
-            isConnected = true;
-
-            if (KeyManage.getUserCount() < 1) {
-                (new DialogFragment_ChangeOAuthKey()).show(getSupportFragmentManager(), getString(R.string.action_change_consumer_key));
-            } else {
-                pref_tl_api_count = PreferenceManage.getInt(this, "pref_tl_api_count", 200);
-                final String url = IntentString.getUrlFromIntent(getIntent(), TwitterAccess.URL_PROTOCOL + TwitterAccess.URL_TWITTER);
-                setSearchWord(url);
-            }
-        }
     }
 
     @Override
@@ -263,6 +251,20 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
         getPreferences();
 
         registerConnectionReceiver();
+
+        if (CheckConnectivity.isConnected()) {
+            isConnected = true;
+
+            if (KeyManage.getUserCount() < 1) {
+                (new DialogFragment_ChangeOAuthKey()).show(getSupportFragmentManager(), getString(R.string.action_change_consumer_key));
+            } else {
+                pref_tl_api_count = PreferenceManage.getInt(this, "pref_tl_api_count", 200);
+                final String url = IntentString.getUrlFromIntent(getIntent(), TwitterAccess.URL_PROTOCOL + TwitterAccess.URL_TWITTER);
+                if (!searchViewString.equals(url)) {
+                    setSearchWord(url);
+                }
+            }
+        }
     }
 
     private final void changeRefreshLayoutIcon(boolean enable) {
