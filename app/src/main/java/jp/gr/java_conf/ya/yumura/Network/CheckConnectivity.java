@@ -51,7 +51,7 @@ public class CheckConnectivity {
         final Context context = App.getContext();
         if (context != null) {
             if (getConnectedType().equals("WIFI")) {
-                final WifiManager manager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+                final WifiManager manager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 final WifiInfo info = manager.getConnectionInfo();
                 return info.getLinkSpeed();
             } else if (!getConnectedType().equals("")) {

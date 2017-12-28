@@ -5,9 +5,11 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.view.MenuItemCompat;
@@ -25,6 +27,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -48,6 +51,7 @@ import jp.gr.java_conf.ya.yumura.Twitter.BinarySearchUtil;
 import jp.gr.java_conf.ya.yumura.Twitter.KeyManage;
 import jp.gr.java_conf.ya.yumura.Twitter.OAuthUser;
 import jp.gr.java_conf.ya.yumura.Twitter.TwitterAccess;
+import twitter4j.ResponseList;
 import twitter4j.Status;
 import twitter4j.StatusUpdate;
 import twitter4j.auth.OAuthAuthorization;
@@ -69,6 +73,7 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
     private Date preSwipeRefreshTime = new Date(0);
     private FloatingActionButton fab;
     private int pref_tl_api_count = 200;
+    private CoordinatorLayout baseView;
     private RecyclerView recyclerView;
     private SwipeRefreshLayout swipeRefresh;
     private SearchView searchView;
@@ -296,30 +301,44 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
         new Thread(new Runnable() {
             @Override
             public final void run() {
-                final Status status = TwitterAccess.getStatusesJustBefore(KeyManage.getCurrentUser().screenName).get(0);
+                final ResponseList<Status> statuses = TwitterAccess.getStatusesJustBefore(KeyManage.getCurrentUser().screenName, 3);
                 if (pref_debug_write_logcat)
-                    Log.i("Yumura", "delJustBefore() " + (new ViewString()).getStatusText(status, false, "", ""));
+                    Log.i("Yumura", "delJustBefore() " + (new ViewString()).getStatusText(statuses.get(0), false, "", ""));
+
+                final List<String> texts = new ArrayList<>();
+                for (final Status s : statuses) {
+                    texts.add(ViewString.getScreennameAndTextAndFooter(s));
+                }
+                final ArrayList<Integer> checkedItems = new ArrayList<>();
 
                 runOnUiThread(new Runnable() {
                     @Override
                     public final void run() {
-
                         AlertDialog.Builder builder = new AlertDialog.Builder(TlActivity.this);
                         builder.setTitle(R.string.action_delJustBefore);
-                        builder.setMessage(ViewString.getScreennameAndTextAndFooter(status));
+                        builder.setMultiChoiceItems(texts.toArray(new String[0]), null, new DialogInterface.OnMultiChoiceClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                                        if (isChecked) checkedItems.add(which);
+                                        else checkedItems.remove((Integer) which);
+                                    }
+                                });
                         builder.setPositiveButton(R.string.action_delJustBefore_del,
                                 new DialogInterface.OnClickListener() {
-
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
-                                        new Thread(new Runnable() {
-                                            @Override
-                                            public final void run() {
-                                                // adapter = new TlAdapter(TlActivity.this, recyclerView);
-                                                TwitterAccess twitterAccess = new TwitterAccess(adapter);
-                                                twitterAccess.destroyStatus(KeyManage.getCurrentUser().screenName, status);
-                                            }
-                                        }).start();
+                                        for (final int i : checkedItems)
+                                            new Thread(new Runnable() {
+                                                @Override
+                                                public final void run() {
+                                                    if (pref_debug_write_logcat)
+                                                        Log.i("Yumura", "delJustBefore() " + (new ViewString()).getStatusText(statuses.get(i), false, "", ""));
+
+                                                    // adapter = new TlAdapter(TlActivity.this, recyclerView);
+                                                    TwitterAccess twitterAccess = new TwitterAccess(adapter);
+                                                    twitterAccess.destroyStatus(KeyManage.getCurrentUser().screenName, statuses.get(i));
+                                                }
+                                            }).start();
                                     }
                                 });
                         builder.create().show();
@@ -499,6 +518,7 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
             }
         });
 
+        int pref_tl_theme_color_background = PreferenceManage.getInt(this, "pref_tl_theme_color_background", Color.TRANSPARENT);
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         swipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
         swipeRefresh.setColorSchemeResources(R.color.colorAccent);
@@ -510,6 +530,9 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
                 changeRefreshLayoutIcon(false);
             }
         });
+
+        if (pref_tl_theme_color_background != Color.TRANSPARENT)
+            recyclerView.setBackgroundColor(pref_tl_theme_color_background);
 
         adapter = new TlAdapter(this, recyclerView, swipeRefresh);
 
@@ -612,7 +635,7 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
                             }
                         }
                     });
-            builder.setNegativeButton(R.string.message_change_consumer_key_no,
+            builder.setNeutralButton(R.string.message_change_consumer_key_no,
                     new DialogInterface.OnClickListener() {
 
                         @Override

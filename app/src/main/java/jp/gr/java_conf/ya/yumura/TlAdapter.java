@@ -22,6 +22,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -317,8 +318,9 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
             onBindViewHolderIcon(holder, status);
         }
 
-        if (pref_tl_theme_color_background != Color.TRANSPARENT)
-            holder.itemView.setBackgroundColor(pref_tl_theme_color_background);
+        if (pref_tl_theme_color_background != Color.TRANSPARENT){
+            holder.statusView.setBackgroundColor(pref_tl_theme_color_background);
+            holder.itemView.setBackgroundColor(pref_tl_theme_color_background);}
 
         if (pref_tl_theme_color_font != Color.TRANSPARENT)
             holder.statusText.setTextColor(pref_tl_theme_color_font);
@@ -620,13 +622,14 @@ public class TlAdapter extends RecyclerView.Adapter<TlAdapter.ViewHolder> {
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
+        LinearLayout statusView;
         com.android.volley.toolbox.NetworkImageView statusIcon;
         com.android.volley.toolbox.NetworkImageView statusIconRt;
-
         TextView statusText;
 
         public ViewHolder(View v) {
             super(v);
+            statusView = (LinearLayout) v.findViewById(R.id.statusView);
             statusIcon = (com.android.volley.toolbox.NetworkImageView) v.findViewById(R.id.statusIcon);
             statusIconRt = (com.android.volley.toolbox.NetworkImageView) v.findViewById(R.id.statusIconRt);
             statusText = (TextView) v.findViewById(R.id.statusText);

@@ -41,8 +41,8 @@ import twitter4j.conf.ConfigurationBuilder;
 public class TwitterAccess {
     public static final String CALLBACK_URL = "callback://CallbackActivity";
     public static final String CALLBACK_URL_VERIFIER = "oauth_verifier";
-    public static final String CONSUMER_KEY = "jo2l8yatSpA6bxQFp3LuHA"; // GitHub投稿時に除去
-    public static final String CONSUMER_SECRET = "CvEQUYFW5b5esg0beWo2XuR1xjJnveNQrMhd9yf64";
+    public static final String CONSUMER_KEY = ""; // GitHub投稿時に除去
+    public static final String CONSUMER_SECRET = "";
     public static final String URL_PROTOCOL_HTTP = "http://";
     public static final String URL_PROTOCOL = "https://";
     public static final String URL_TWITTER = "twitter.com";

@@ -10,7 +10,7 @@ Lightweight Twitter app for *Android*
 ## Install
 ---
 
-Download the APK package from [github](https://github.com/YA-androidapp/Yumura/blob/master/app/app-release.apk?raw=true) or [Google Play](https://play.google.com/store/apps/details?id=jp.gr.java_conf.ya.yumura)
+Download the APK package from [github](https://github.com/YA-androidapp/Yumura/blob/master/app/app-release.apk?raw=true) or [Google Play (old ver.)](https://play.google.com/store/apps/details?id=jp.gr.java_conf.ya.yumura)
 
 ## Libraries
 ---
