@@ -1,12 +1,17 @@
 package jp.gr.java_conf.ya.yumura; // Copyright (c) 2013-2017 YA <ya.androidapp@gmail.com> All rights reserved. --><!-- This software includes the work that is distributed in the Apache License 2.0
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ShortcutInfo;
+import android.content.pm.ShortcutManager;
 import android.graphics.Color;
+import android.graphics.drawable.Icon;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.design.widget.CoordinatorLayout;
@@ -27,7 +32,6 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -317,12 +321,12 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
                         AlertDialog.Builder builder = new AlertDialog.Builder(TlActivity.this);
                         builder.setTitle(R.string.action_delJustBefore);
                         builder.setMultiChoiceItems(texts.toArray(new String[0]), null, new DialogInterface.OnMultiChoiceClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which, boolean isChecked) {
-                                        if (isChecked) checkedItems.add(which);
-                                        else checkedItems.remove((Integer) which);
-                                    }
-                                });
+                            @Override
+                            public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                                if (isChecked) checkedItems.add(which);
+                                else checkedItems.remove((Integer) which);
+                            }
+                        });
                         builder.setPositiveButton(R.string.action_delJustBefore_del,
                                 new DialogInterface.OnClickListener() {
                                     @Override
@@ -401,13 +405,29 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
 
     private final void makeShortcut(final String url) {
         final Intent shortcutIntent = uriStringToIntent(url);
+        final String shortcutName = uriStringToShortcutName(url);
 
-        final Intent intent = new Intent("com.android.launcher.action.INSTALL_SHORTCUT");
-        intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
-        final Parcelable icon = Intent.ShortcutIconResource.fromContext(this, R.drawable.ic_launcher);
-        intent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, icon);
-        intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, uriStringToShortcutName(url));
-        this.sendBroadcast(intent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Android Oreo Support
+            final Icon icon = Icon.createWithResource(this, R.drawable.ic_launcher);
+            ShortcutInfo shortcutInfo = new ShortcutInfo.Builder(getApplicationContext(), shortcutName)
+                    .setShortLabel(shortcutName)
+                    .setLongLabel(shortcutName)
+                    .setIcon(icon)
+                    .setIntent(shortcutIntent)
+                    .build();
+
+            ShortcutManager shortcutManager = getSystemService(ShortcutManager.class);
+            shortcutManager.requestPinShortcut(shortcutInfo, null); // addDynamicShortcuts
+        } else {
+            final Intent intent = new Intent("com.android.launcher.action.INSTALL_SHORTCUT");
+            intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
+
+            final Parcelable icon = Intent.ShortcutIconResource.fromContext(this, R.drawable.ic_launcher);
+            intent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, icon);
+            intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, shortcutName);
+            this.sendBroadcast(intent);
+        }
     }
 
     private final void registerConnectionReceiver() {
@@ -451,6 +471,7 @@ public class TlActivity extends AppCompatActivity implements ConnectionReceiver.
         });
     }
 
+    @SuppressLint("RestrictedApi")
     private final boolean setSearchWord(final String searchWord) {
         if (pref_debug_write_logcat) Log.i("Yumura", "setSearchWord(" + searchWord + ")");
         try {
